@@ -4,7 +4,7 @@
 
 **Blocked by:** 05.
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 - [ ] Active Round deletable with confirmation; History list ignores it afterwards
 - [ ] History detail shows course, layout, players, date, per-hole Scores, totals vs par

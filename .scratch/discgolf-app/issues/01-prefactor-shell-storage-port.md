@@ -4,7 +4,7 @@
 
 **Blocked by:** None (can start immediately).
 
-**Status:** claimed
+**Status:** resolved
 
 - [ ] App boots; all phase-1 routes reachable and navigable by links
 - [ ] Storage port selected by env; backend in dev/test is the in-memory adapter; no app code outside the port imports a concrete backend

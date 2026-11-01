@@ -4,7 +4,7 @@
 
 **Blocked by:** 01.
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 - [ ] IndexedDB adapter passes the full port conformance suite unchanged
 - [ ] Default backend is IndexedDB; dev/demo can still select the in-memory adapter via env only

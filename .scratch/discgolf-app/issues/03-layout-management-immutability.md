@@ -4,7 +4,7 @@
 
 **Blocked by:** 02.
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 - [ ] Create a Layout with hole count and per-hole pars; edit freely before any Round uses it
 - [ ] After a Round references a Layout, editing produces a fresh selectable Layout with the same name; the old is archived and old rounds' totals vs par stay intact

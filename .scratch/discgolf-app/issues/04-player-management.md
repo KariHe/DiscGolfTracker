@@ -4,7 +4,7 @@
 
 **Blocked by:** 01.
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 - [ ] Add/rename Players; list usable from the round picker
 - [ ] Unreferenced Player deletable; referenced Player only archivable

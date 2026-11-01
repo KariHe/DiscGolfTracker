@@ -4,7 +4,7 @@
 
 **Blocked by:** 01.
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 - [ ] Create a Course (name + optional location); see it in the course list immediately
 - [ ] Edit name/location; delete unavailable-with-history, Archive available-with-history, per spec

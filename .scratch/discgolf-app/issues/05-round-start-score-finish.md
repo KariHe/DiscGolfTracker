@@ -4,7 +4,7 @@
 
 **Blocked by:** 03, 04.
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 - [ ] Port rejects starting a second Active Round; resume path deep-links to it
 - [ ] Round created with date, Layout, Players; scoring updates per-player Scores per hole
