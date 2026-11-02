@@ -11,7 +11,7 @@ import { playerTotals, vsParLabel } from '../domain/scores.ts'
 import type { Course, Layout, Player, Round } from '../domain/types.ts'
 import { playerTint, scoreColor } from '../theme'
 
-const visuallyHidden = { position: 'absolute', width: 1, height: 1, overflow: 'hidden', clipPath: 'inset(50%)' } as const
+const visuallyHidden = { position: 'absolute', width: '1px', height: '1px', overflow: 'hidden', clipPath: 'inset(50%)' } as const
 
 function formatDate(date?: string) {
   if (!date) return ''

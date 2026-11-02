@@ -171,7 +171,7 @@ function ActiveRoundCard({ round, layout, courseName, players }: {
             <Box key={player.id} sx={{ display: 'flex', alignItems: 'center', gap: 0.75, p: '6px 10px 6px 6px', borderRadius: 999, bgcolor: 'surface.elevated' }}>
               <Avatar aria-hidden="true" sx={{ width: 22, height: 22, fontSize: 11, bgcolor: playerTint(theme, index) }}>{player.name[0]}</Avatar>
               <Typography variant="numeric" sx={{ color: scoreColor(theme, vsPar ?? 0) }}>
-                <Box component="span" sx={{ position: 'absolute', width: 1, height: 1, overflow: 'hidden', clipPath: 'inset(50%)' }}>{player.name} </Box>
+                <Box component="span" sx={{ position: 'absolute', width: '1px', height: '1px', overflow: 'hidden', clipPath: 'inset(50%)' }}>{player.name} </Box>
                 {vsParLabel(vsPar)}
               </Typography>
             </Box>
