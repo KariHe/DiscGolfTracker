@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router'
-import RoundPrototype from './Round.prototype.tsx'
 import { useStorage } from '../storage/useStorage.ts'
 import { playerTotals, formatVsPar } from '../domain/scores.ts'
 import type { Layout, Player, Round } from '../domain/types.ts'
@@ -81,13 +80,6 @@ export default function Round() {
         <Link to="/round/new">Start a round</Link>
       </>
     )
-  }
-
-  // PROTOTYPE: touch-first redesign variants live at ?variant= (A/B/C; "0" is
-  // this table). Throwaway — scores there are local-only and never persisted.
-  const protoVariant = import.meta.env.DEV ? searchParams.get('variant') : null
-  if (protoVariant) {
-    return <RoundPrototype round={round} layout={layout} players={players} />
   }
 
   return (

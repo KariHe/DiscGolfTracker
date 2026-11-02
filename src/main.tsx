@@ -5,6 +5,7 @@ import './index.css'
 import App from './App.tsx'
 import { createStorageFromEnv } from './storage/index.ts'
 import { StorageProvider } from './storage/StorageProvider.tsx'
+import { AppThemeProvider } from './theme/AppThemeProvider.tsx'
 
 const root = document.getElementById('root')
 if (root) {
@@ -12,7 +13,7 @@ if (root) {
     <StrictMode>
       <StorageProvider storage={createStorageFromEnv()}>
         <BrowserRouter>
-          <App />
+          <AppThemeProvider><App /></AppThemeProvider>
         </BrowserRouter>
       </StorageProvider>
     </StrictMode>,
