@@ -32,3 +32,15 @@ export function formatVsPar(vsPar: number | null | undefined): string {
   if (vsPar === null || vsPar === undefined) return ''
   return vsPar > 0 ? `+${vsPar}` : String(vsPar)
 }
+
+/** Name for a hole score, e.g. "Birdie" for 2 on a par 3. */
+export function scoreName(strokes: number, par: number): string {
+  if (strokes === 1) return 'Ace'
+  const diff = strokes - par
+  if (diff <= -2) return 'Eagle'
+  if (diff === -1) return 'Birdie'
+  if (diff === 0) return 'Par'
+  if (diff === 1) return 'Bogey'
+  if (diff === 2) return 'Double'
+  return 'Triple+'
+}

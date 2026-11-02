@@ -5,12 +5,13 @@ import type { Storage } from '../storage/port.ts'
 import type { Layout, Round } from '../domain/types.ts'
 import { createMemoryStorage } from '../storage/memory.ts'
 import { StorageProvider } from '../storage/StorageProvider.tsx'
+import { AppThemeProvider } from '../theme/AppThemeProvider.tsx'
 
 function renderAt(storage: Storage, entry: string) {
   return render(
     <StorageProvider storage={storage}>
       <MemoryRouter initialEntries={[entry]}>
-        <App />
+        <AppThemeProvider><App /></AppThemeProvider>
       </MemoryRouter>
     </StorageProvider>,
   )
@@ -50,9 +51,10 @@ describe('Round lifecycle', () => {
     renderAt(storage, '/round')
 
     await waitFor(() =>
-      expect(screen.getByRole('button', { name: 'Delete active round' })).toBeTruthy(),
+      expect(screen.getByRole('button', { name: 'Round menu' })).toBeTruthy(),
     )
-    fireEvent.click(screen.getByRole('button', { name: 'Delete active round' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Round menu' }))
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Delete active round' }))
     await waitFor(() => expect(screen.getByRole('heading', { name: 'Home' })).toBeTruthy())
     expect(await storage.get('rounds', active.id)).toBeUndefined()
   })
@@ -71,9 +73,10 @@ describe('Round lifecycle', () => {
     renderAt(storage, '/round')
 
     await waitFor(() =>
-      expect(screen.getByRole('button', { name: 'Delete active round' })).toBeTruthy(),
+      expect(screen.getByRole('button', { name: 'Round menu' })).toBeTruthy(),
     )
-    fireEvent.click(screen.getByRole('button', { name: 'Delete active round' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Round menu' }))
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Delete active round' }))
     expect(await storage.list('rounds')).toHaveLength(2)
   })
 

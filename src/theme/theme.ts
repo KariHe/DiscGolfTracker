@@ -112,8 +112,8 @@ export const theme = createTheme({
         sizeLarge: { height: 60, fontSize: 18 },
         sizeMedium: { height: 56 },
         sizeSmall: { height: 44, fontSize: 15, paddingInline: 16 },
-        containedPrimary: {
-          '&:hover': { backgroundColor: '#D4F56E' },
+        colorPrimary: {
+          '&.MuiButton-contained:hover': { backgroundColor: '#D4F56E' },
         },
         outlined: ({ theme }) => ({
           borderWidth: 2,
@@ -183,10 +183,12 @@ export const theme = createTheme({
 
     MuiDrawer: {
       styleOverrides: {
-        paperAnchorBottom: ({ theme }) => ({
-          borderRadius: `${theme.radius.sheet}px ${theme.radius.sheet}px 0 0`,
-          backgroundColor: theme.palette.surface.raised,
-          padding: '12px 20px 28px',
+        root: ({ theme }) => ({
+          '&.MuiDrawer-anchorBottom .MuiDrawer-paper': {
+            borderRadius: `${theme.radius.sheet}px ${theme.radius.sheet}px 0 0`,
+            backgroundColor: theme.palette.surface.raised,
+            padding: '12px 20px 28px',
+          },
         }),
       },
     },

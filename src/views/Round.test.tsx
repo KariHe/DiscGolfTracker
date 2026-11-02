@@ -4,12 +4,13 @@ import App from '../App.tsx'
 import type { Storage } from '../storage/port.ts'
 import { createMemoryStorage } from '../storage/memory.ts'
 import { StorageProvider } from '../storage/StorageProvider.tsx'
+import { AppThemeProvider } from '../theme/AppThemeProvider.tsx'
 
 function renderAt(storage: Storage, entry: string) {
   return render(
     <StorageProvider storage={storage}>
       <MemoryRouter initialEntries={[entry]}>
-        <App />
+        <AppThemeProvider><App /></AppThemeProvider>
       </MemoryRouter>
     </StorageProvider>,
   )
@@ -38,13 +39,16 @@ describe('Scorekeeper round', () => {
     fireEvent.click(screen.getByRole('checkbox'))
     fireEvent.click(screen.getByRole('button', { name: 'Start round' }))
 
-    await waitFor(() => expect(screen.getByRole('heading', { name: 'Scorekeeper' })).toBeTruthy())
+    await waitFor(() => expect(screen.getByRole('heading', { name: 'Kivilahti' })).toBeTruthy())
 
+    fireEvent.click(screen.getByRole('button', { name: 'Open scorecard' }))
     fireEvent.change(screen.getByLabelText('Kari strokes hole 1'), { target: { value: '4' } })
     fireEvent.change(screen.getByLabelText('Kari strokes hole 2'), { target: { value: '3' } })
     await waitFor(() => expect(screen.getByText(/7 \(\d\)/)).toBeTruthy())
 
-    fireEvent.click(screen.getByRole('button', { name: 'Finish round' }))
+    fireEvent.keyDown(screen.getByRole('dialog'), { key: 'Escape' })
+    fireEvent.click(await screen.findByRole('button', { name: 'Round menu' }))
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Finish round' }))
     await waitFor(() => expect(screen.getByRole('heading', { name: 'History' })).toBeTruthy())
     expect(screen.getByText(/7 \(/)).toBeTruthy()
     const rounds = await storage.list('rounds')
@@ -62,7 +66,28 @@ describe('Scorekeeper round', () => {
     })
     renderAt(storage, '/round/new')
 
-    await waitFor(() => expect(screen.getByRole('heading', { name: 'Scorekeeper' })).toBeTruthy())
+    await waitFor(() => expect(screen.getByRole('heading', { name: 'Kivilahti' })).toBeTruthy())
+  })
+
+  it('scores a hole with the picker and advances on finish hole', async () => {
+    const { storage, layout, player } = await seededRound()
+    await storage.save('rounds', {
+      finished: false,
+      layoutId: layout.id,
+      playerIds: [player.id],
+      scores: {},
+    })
+    renderAt(storage, '/round')
+
+    await waitFor(() => expect(screen.getByText('Hole 1 of 2')).toBeTruthy())
+    fireEvent.click(screen.getByRole('button', { name: /^Set throws for Kari, currently 3/ }))
+    fireEvent.click(screen.getByRole('button', { name: 'Set score' }))
+    fireEvent.click(await screen.findByRole('button', { name: 'Finish hole 1' }))
+
+    await waitFor(() => expect(screen.getByText('Hole 2 of 2')).toBeTruthy())
+    const [saved] = await storage.list('rounds')
+    expect(saved.scores?.[player.id]?.[0]).toBe(3)
+    expect(screen.getByRole('button', { name: 'Finish round' })).toBeTruthy()
   })
 
   it('shows no active round when none exists', async () => {
