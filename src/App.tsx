@@ -13,8 +13,22 @@ import { AppThemeProvider } from './theme/AppThemeProvider.tsx'
 
 function Layout() {
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: 'calc(100dvh - 2rem)' }}>
-      <Box sx={{ flex: 1 }}>
+    // Fixed-height shell: only the content area scrolls, the tab bar stays put.
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100dvh' }}>
+      <Box
+        component="main"
+        sx={{
+          flex: 1,
+          minHeight: 0,
+          overflowY: 'auto',
+          display: 'flex',
+          flexDirection: 'column',
+          px: 2,
+          pt: 2,
+          scrollbarWidth: 'none',
+          '&::-webkit-scrollbar': { display: 'none' },
+        }}
+      >
         <Outlet />
       </Box>
       <TabBar />
@@ -31,11 +45,11 @@ export default function App() {
           <Route path="/courses" element={<Courses />} />
           <Route path="/players" element={<Players />} />
           <Route path="/history" element={<History />} />
+          <Route path="/round/new" element={<RoundStart />} />
+          <Route path="/round" element={<Round />} />
+          <Route path="/history/:roundId" element={<HistoryDetail />} />
+          <Route path="/courses/:courseId" element={<CourseDetail />} />
         </Route>
-        <Route path="/round/new" element={<RoundStart />} />
-        <Route path="/round" element={<Round />} />
-        <Route path="/history/:roundId" element={<HistoryDetail />} />
-        <Route path="/courses/:courseId" element={<CourseDetail />} />
       </Routes>
     </AppThemeProvider>
   )

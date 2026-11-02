@@ -141,7 +141,7 @@ export default function HistoryDetail() {
     values.reduce<number>((sum, value) => (typeof value === 'number' ? sum + value : sum), 0)
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: 'calc(100dvh - 2rem)' }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1, pt: 0.5, pb: 1 }}>
         <IconButton component={Link} to="/history" aria-label="Back to history">
           <Icon>{icon.back}</Icon>

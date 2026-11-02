@@ -23,10 +23,7 @@ export function TabBar() {
       component="nav"
       aria-label="Main"
       sx={(t) => ({
-        position: 'sticky',
-        bottom: 0,
-        mx: -2,
-        mb: -2,
+        flex: 'none',
         display: 'flex',
         justifyContent: 'space-around',
         p: '10px 8px 26px',

@@ -126,7 +126,7 @@ export default function Round() {
   }
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: 'calc(100dvh - 2rem)' }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', pt: 0.5, pb: 1 }}>
         <IconButton aria-label="Back" onClick={() => navigate('/')}>
           <Icon>{icon.back}</Icon>

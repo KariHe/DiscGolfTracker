@@ -81,7 +81,7 @@ export default function RoundStart() {
   const startLabel = picked.length === 1 ? 'Start round · 1 player' : `Start round · ${picked.length} players`
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: 'calc(100dvh - 2rem)' }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, pt: 0.5, pb: 1 }}>
         <IconButton component={RouterLink} to="/" aria-label="Back">
           <Icon>{icon.back}</Icon>
