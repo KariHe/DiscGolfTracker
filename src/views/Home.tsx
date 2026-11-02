@@ -9,17 +9,13 @@ import Link from '@mui/material/Link'
 import Typography from '@mui/material/Typography'
 import { useTheme } from '@mui/material/styles'
 import { useStorage } from '../storage/useStorage.ts'
-import { firstIncompleteHole, formatVsPar, playerTotals } from '../domain/scores.ts'
+import { firstIncompleteHole, playerTotals, vsParLabel } from '../domain/scores.ts'
 import type { Course, Layout, Player, Round } from '../domain/types.ts'
 import { playerTint, scoreColor } from '../theme'
 import { Icon } from '../components/Icon.tsx'
 import { icon } from '../components/icons.tsx'
 
 const RECENT_COUNT = 2
-
-function vsParLabel(vsPar: number | null) {
-  return vsPar === 0 ? 'E' : formatVsPar(vsPar)
-}
 
 function dateParts(date?: string) {
   if (!date) return { month: '', day: '–' }

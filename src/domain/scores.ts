@@ -28,6 +28,11 @@ export function playerTotals(
   return { total, vsPar }
 }
 
+/** Score vs par for display: "E" when even, else "+2" / "-1". */
+export function vsParLabel(vsPar: number | null): string {
+  return vsPar === 0 ? 'E' : formatVsPar(vsPar)
+}
+
 export function formatVsPar(vsPar: number | null | undefined): string {
   if (vsPar === null || vsPar === undefined) return ''
   return vsPar > 0 ? `+${vsPar}` : String(vsPar)

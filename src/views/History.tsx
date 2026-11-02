@@ -1,24 +1,47 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Link } from 'react-router'
+import { Link as RouterLink } from 'react-router'
+import Avatar from '@mui/material/Avatar'
+import Box from '@mui/material/Box'
+import ButtonBase from '@mui/material/ButtonBase'
+import Card from '@mui/material/Card'
+import Typography from '@mui/material/Typography'
+import { useTheme } from '@mui/material/styles'
 import { useStorage } from '../storage/useStorage.ts'
-import { playerTotals, formatVsPar } from '../domain/scores.ts'
-import type { Layout, Player, Round } from '../domain/types.ts'
+import { playerTotals, vsParLabel } from '../domain/scores.ts'
+import type { Course, Layout, Player, Round } from '../domain/types.ts'
+import { playerTint, scoreColor } from '../theme'
+
+const visuallyHidden = { position: 'absolute', width: 1, height: 1, overflow: 'hidden', clipPath: 'inset(50%)' } as const
+
+function formatDate(date?: string) {
+  if (!date) return ''
+  return new Date(`${date}T00:00`)
+    .toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })
+    .replace(',', '')
+    .toUpperCase()
+}
 
 export default function History() {
   const storage = useStorage()
+  const theme = useTheme()
   const [rounds, setRounds] = useState<Round[]>([])
   const [layouts, setLayouts] = useState<Layout[]>([])
   const [players, setPlayers] = useState<Player[]>([])
+  const [courses, setCourses] = useState<Course[]>([])
 
   const reload = useCallback(async () => {
-    const [allRounds, allLayouts, allPlayers] = await Promise.all([
+    const [allRounds, allLayouts, allPlayers, allCourses] = await Promise.all([
       storage.list('rounds'),
       storage.list('layouts'),
       storage.list('players'),
+      storage.list('courses'),
     ])
-    setRounds(allRounds.filter((round) => round.finished))
+    setRounds(allRounds
+      .filter((round) => round.finished)
+      .sort((a, b) => (b.date ?? '').localeCompare(a.date ?? '')))
     setLayouts(allLayouts)
     setPlayers(allPlayers)
+    setCourses(allCourses)
   }, [storage])
 
   useEffect(() => {
@@ -26,32 +49,59 @@ export default function History() {
   }, [reload])
 
   return (
-    <>
-      <h1>History</h1>
-      {rounds.length === 0 && <p>No finished rounds yet</p>}
-      <ul>
-        {rounds.map((round) => (
-          <li key={round.id}>
-            <Link to={`/history/${round.id}`}>{round.date}</Link> —{' '}
-            {layouts.find((l) => l.id === round.layoutId)?.name}
-            <ul>
-              {round.playerIds?.map((playerId) => {
-                const player = players.find((candidate) => candidate.id === playerId)
-                if (!player) return null
-                const layout = layouts.find((l) => l.id === round.layoutId)
-                const { total, vsPar } = playerTotals(round, player.id, layout ?? null)
-                const formatted = formatVsPar(vsPar)
-                return (
-                  <li key={playerId}>
-                    {player.name}: {total}
-                    {formatted && ` (${formatted})`}
-                  </li>
-                )
-              })}
-            </ul>
-          </li>
-        ))}
-      </ul>
-    </>
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, pt: 1.5, pb: 2 }}>
+      <Box sx={{ mb: 1 }}>
+        <Typography variant="overline" color="text.secondary">
+          {rounds.length} finished {rounds.length === 1 ? 'round' : 'rounds'}
+        </Typography>
+        <Typography variant="h1" sx={{ fontSize: 34, mt: 0.5 }}>History</Typography>
+      </Box>
+
+      {rounds.length === 0 && (
+        <Typography variant="body2" color="text.secondary">No finished rounds yet</Typography>
+      )}
+
+      {rounds.map((round) => {
+        const layout = layouts.find((l) => l.id === round.layoutId) ?? null
+        const course = courses.find((c) => c.id === layout?.courseId)
+        const par = layout?.pars.reduce((sum, holePar) => sum + holePar, 0)
+        const ranked = players
+          .filter((player) => round.playerIds?.includes(player.id))
+          .map((player, index) => ({ player, tint: playerTint(theme, index), ...playerTotals(round, player.id, layout) }))
+          .sort((a, b) => a.total - b.total)
+        return (
+          <Card key={round.id}>
+            <ButtonBase
+              component={RouterLink}
+              to={`/history/${round.id}`}
+              sx={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'stretch', gap: 1.5, p: 2, textAlign: 'left' }}
+            >
+              <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 1.5 }}>
+                <Box sx={{ minWidth: 0 }}>
+                  <Typography variant="h5" component="h2" noWrap>{course?.name ?? layout?.name}</Typography>
+                  <Typography variant="subtitle2" color="text.secondary" noWrap>
+                    {layout?.name}{par !== undefined && ` · par ${par}`}
+                  </Typography>
+                </Box>
+                <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700, letterSpacing: '0.06em', pt: '3px', whiteSpace: 'nowrap' }}>
+                  {formatDate(round.date)}
+                </Typography>
+              </Box>
+              <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                {ranked.map(({ player, tint, total, vsPar }) => (
+                  <Box key={player.id} sx={{ display: 'flex', alignItems: 'center', gap: 0.75, p: '5px 10px 5px 5px', borderRadius: 999, bgcolor: 'surface.elevated' }}>
+                    <Avatar aria-hidden="true" sx={{ width: 24, height: 24, fontSize: 11, bgcolor: tint }}>{player.name[0]}</Avatar>
+                    <Box component="span" sx={visuallyHidden}>{player.name} </Box>
+                    <Typography variant="numeric" sx={{ fontWeight: 700 }}>{total}</Typography>
+                    {' '}
+                    <Typography variant="numeric" sx={{ color: scoreColor(theme, vsPar ?? 0) }}>{vsParLabel(vsPar)}</Typography>
+                  </Box>
+                ))}
+              </Box>
+            </ButtonBase>
+          </Card>
+        )
+      })}
+    </Box>
   )
 }

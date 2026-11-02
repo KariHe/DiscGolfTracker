@@ -53,7 +53,7 @@ describe('Scorekeeper round', () => {
     fireEvent.click(await screen.findByRole('button', { name: 'Round menu' }))
     fireEvent.click(screen.getByRole('menuitem', { name: 'Finish round' }))
     await waitFor(() => expect(screen.getByRole('heading', { name: 'History' })).toBeTruthy())
-    expect(screen.getByText(/7 \(/)).toBeTruthy()
+    expect(await screen.findByRole('link', { name: /Kari\s*7\s*E/ })).toBeTruthy()
     const rounds = await storage.list('rounds')
     expect(rounds).toHaveLength(1)
     expect(rounds[0].finished).toBe(true)

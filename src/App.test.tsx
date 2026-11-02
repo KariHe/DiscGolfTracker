@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react'
+import { fireEvent, render, screen, within } from '@testing-library/react'
 import { MemoryRouter } from 'react-router'
 import { StorageProvider } from './storage/StorageProvider.tsx'
 import { createMemoryStorage } from './storage/memory.ts'
@@ -44,6 +44,29 @@ describe('app shell', () => {
     )
     expect(await screen.findByRole('link', { name: /Resume round/ })).toBeTruthy()
     expect(screen.getByText('Short 3 · 1 player · Hole 2 of 3')).toBeTruthy()
+  })
+
+  it('lists History newest first with the leader first', async () => {
+    const storage = createMemoryStorage()
+    const course = await storage.save('courses', { name: 'Kivilahti' })
+    const layout = await storage.save('layouts', { courseId: course.id, name: 'Short 2', pars: [3, 3] })
+    const ann = await storage.save('players', { name: 'Ann' })
+    const bob = await storage.save('players', { name: 'Bob' })
+    const round = (date: string) => ({
+      finished: true, date, layoutId: layout.id, playerIds: [ann.id, bob.id],
+      scores: { [ann.id]: [4, 4], [bob.id]: [2, 3] },
+    })
+    await storage.save('rounds', round('2026-10-01'))
+    await storage.save('rounds', round('2026-10-20'))
+    render(
+      <StorageProvider storage={storage}>
+        <MemoryRouter initialEntries={['/history']}><App /></MemoryRouter>
+      </StorageProvider>,
+    )
+    const cards = await screen.findAllByRole('link', { name: /Kivilahti/ })
+    expect(cards).toHaveLength(2)
+    expect(within(cards[0]).getByText(/20 OCT/)).toBeTruthy()
+    expect(cards[0].textContent).toMatch(/Bob\s*5.*Ann\s*8/)
   })
 
   it('renders deep link to active round', () => {

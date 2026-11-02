@@ -15,7 +15,7 @@ import MenuItem from '@mui/material/MenuItem'
 import Typography from '@mui/material/Typography'
 import { useTheme } from '@mui/material/styles'
 import { useStorage } from '../storage/useStorage.ts'
-import { firstIncompleteHole, playerTotals, formatVsPar, scoreName } from '../domain/scores.ts'
+import { firstIncompleteHole, playerTotals, formatVsPar, scoreName, vsParLabel } from '../domain/scores.ts'
 import type { Course, Layout, Player, Round } from '../domain/types.ts'
 import { playerTint, scoreColor } from '../theme'
 import { Icon } from '../components/Icon.tsx'
@@ -189,7 +189,7 @@ export default function Round() {
                 <Typography variant="h5" noWrap>{player.name}</Typography>
                 <Typography variant="subtitle2" color="text.secondary">
                   <Typography variant="numeric" sx={{ color: scoreColor(theme, vsPar ?? 0) }}>
-                    {vsPar === 0 ? 'E' : formatVsPar(vsPar)}
+                    {vsParLabel(vsPar)}
                   </Typography>
                   {' '}thru {hole}
                 </Typography>
