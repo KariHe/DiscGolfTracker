@@ -79,11 +79,21 @@ describe('Round lifecycle', () => {
     expect(await storage.list('rounds')).toHaveLength(2)
   })
 
+  it('shows standings, par and note on History detail', async () => {
+    const { storage, round } = await seededHistory({ note: 'windy' })
+    renderAt(storage, `/history/${round.id}`)
+
+    expect(await screen.findByText('Final · par 7')).toBeTruthy()
+    expect(screen.getByText('+2')).toBeTruthy()
+    expect(screen.getByText('windy')).toBeTruthy()
+    expect(screen.queryByLabelText('Round note')).toBeNull()
+  })
+
   it('edits a finished round from History detail (scores, date, note)', async () => {
     const { storage, round } = await seededHistory()
     renderAt(storage, `/history/${round.id}`)
 
-    await waitFor(() => expect(screen.getByLabelText('Round note')).toBeTruthy())
+    fireEvent.click(await screen.findByRole('button', { name: 'Edit round' }))
     fireEvent.change(screen.getByLabelText('Kari strokes hole 1'), { target: { value: '2' } })
     fireEvent.change(screen.getByLabelText('Round note'), { target: { value: 'windy' } })
     fireEvent.change(screen.getByLabelText('Round date'), { target: { value: '2026-10-16' } })
@@ -103,10 +113,8 @@ describe('Round lifecycle', () => {
     vi.stubGlobal("confirm", () => true)
     renderAt(storage, `/history/${round.id}`)
 
-    await waitFor(() =>
-      expect(screen.getByRole('button', { name: 'Delete round' })).toBeTruthy(),
-    )
-    fireEvent.click(screen.getByRole('button', { name: 'Delete round' }))
+    fireEvent.click(await screen.findByRole('button', { name: 'Round menu' }))
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Delete round' }))
     await waitFor(() => expect(screen.getByRole('heading', { name: 'History' })).toBeTruthy())
     expect(await storage.list('rounds')).toHaveLength(0)
 

@@ -32,10 +32,10 @@ export default function App() {
           <Route path="/courses/:courseId" element={<CourseDetail />} />
           <Route path="/players" element={<Players />} />
           <Route path="/history" element={<History />} />
-          <Route path="/history/:roundId" element={<HistoryDetail />} />
         </Route>
         <Route path="/round/new" element={<RoundStart />} />
         <Route path="/round" element={<Round />} />
+        <Route path="/history/:roundId" element={<HistoryDetail />} />
       </Routes>
     </AppThemeProvider>
   )
