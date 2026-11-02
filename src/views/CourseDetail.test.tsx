@@ -21,14 +21,14 @@ describe('Layout management', () => {
     const course = await storage.save('courses', { name: 'Kivilahti' })
     renderCourseDetail(storage, course.id)
 
-    await waitFor(() => expect(screen.getByLabelText('Layout name')).toBeTruthy())
+    fireEvent.click(await screen.findByRole('button', { name: 'Add layout' }))
     fireEvent.change(screen.getByLabelText('Layout name'), { target: { value: 'Short 9' } })
     fireEvent.change(screen.getByLabelText('Hole count'), { target: { value: '3' } })
     fireEvent.click(screen.getByRole('button', { name: 'Add layout' }))
-    await waitFor(() => expect(screen.getByText(/Short 9/)).toBeTruthy())
 
-    fireEvent.click(screen.getByRole('button', { name: 'Edit' }))
-    fireEvent.change(screen.getByLabelText('Par hole 2'), { target: { value: '5' } })
+    // the new layout opens for editing; tapping a hole steps its par up
+    fireEvent.click(await screen.findByRole('button', { name: 'Par hole 2: 3' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Par hole 2: 4' }))
     fireEvent.click(screen.getByRole('button', { name: 'Save layout' }))
     await waitFor(() => {
       const layouts = storage.list('layouts').then((all) => {
@@ -54,9 +54,9 @@ describe('Layout management', () => {
     })
     renderCourseDetail(storage, course.id)
 
-    await waitFor(() => expect(screen.getByText(/Championship 18/)).toBeTruthy())
-    fireEvent.click(screen.getByRole('button', { name: 'Edit' }))
-    fireEvent.change(screen.getByLabelText('Par hole 1'), { target: { value: '4' } })
+    fireEvent.click(await screen.findByRole('button', { name: /^Championship 18/ }))
+    expect(screen.getByText(/This layout has rounds/)).toBeTruthy()
+    fireEvent.click(screen.getByRole('button', { name: 'Par hole 1: 3' }))
     fireEvent.click(screen.getByRole('button', { name: 'Save layout' }))
 
     await waitFor(async () => {

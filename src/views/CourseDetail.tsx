@@ -1,27 +1,63 @@
 import { useCallback, useEffect, useState } from 'react'
-import type { FormEvent } from 'react'
-import { Link, useParams } from 'react-router'
+import type { FormEvent, ReactNode } from 'react'
+import { Link, useNavigate, useParams } from 'react-router'
+import Box from '@mui/material/Box'
+import Button from '@mui/material/Button'
+import ButtonBase from '@mui/material/ButtonBase'
+import Card from '@mui/material/Card'
+import Drawer from '@mui/material/Drawer'
+import IconButton from '@mui/material/IconButton'
+import Menu from '@mui/material/Menu'
+import MenuItem from '@mui/material/MenuItem'
+import OutlinedInput from '@mui/material/OutlinedInput'
+import Typography from '@mui/material/Typography'
 import { useStorage } from '../storage/useStorage.ts'
 import { courseIsReferenced, layoutIsReferenced } from '../domain/records.ts'
-import type { Course, Layout } from '../domain/types.ts'
+import type { Course, Layout, Round } from '../domain/types.ts'
+import { Icon } from '../components/Icon.tsx'
+import { icon } from '../components/icons.tsx'
 
 /** Par change when adding holes; standard mid-adjustment default. */
 const DEFAULT_PAR = 3
+const MIN_PAR = 2
+const MAX_PAR = 6
 
-function LayoutEditor({ layout, onDone }: { layout: Layout; onDone: (archived: boolean) => void }) {
+const parTotal = (pars: number[]) => pars.reduce((sum, par) => sum + par, 0)
+
+function Sheet({ open, label, onClose, onSubmit, children }: {
+  open: boolean
+  label: string
+  onClose: () => void
+  onSubmit: (event: FormEvent<HTMLFormElement>) => void
+  children: ReactNode
+}) {
+  return (
+    <Drawer anchor="bottom" open={open} onClose={onClose} slotProps={{ paper: { 'aria-label': label } }}>
+      <Box component="form" onSubmit={onSubmit} sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+        <Box aria-hidden="true" sx={{ width: 40, height: 4, borderRadius: '2px', bgcolor: 'surface.handle', mx: 'auto' }} />
+        <Typography variant="h4" sx={{ textAlign: 'center' }}>{label}</Typography>
+        {children}
+      </Box>
+    </Drawer>
+  )
+}
+
+function LayoutEditor({ layout, used, onDone, onDelete }: {
+  layout: Layout
+  used: boolean
+  onDone: () => void
+  onDelete: () => void
+}) {
   const storage = useStorage()
   const [name, setName] = useState(layout.name)
   const [pars, setPars] = useState<number[]>(layout.pars)
-  const [error, setError] = useState<string | null>(null)
+  const [changed, setChanged] = useState<number | null>(null)
 
-  async function save(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
+  async function save() {
     if (!name.trim()) return
-    const rounds = await storage.list('rounds')
-    const frozen = layoutIsReferenced(rounds, layout.id)
     // ADR-0002: a used Layout cannot change; editing yields a new Layout
     // with the same name and archives the old one
-    if (frozen) {
+    if (used) {
       await storage.save('layouts', { ...layout, archived: true })
       await storage.save('layouts', {
         courseId: layout.courseId,
@@ -29,60 +65,84 @@ function LayoutEditor({ layout, onDone }: { layout: Layout; onDone: (archived: b
         pars,
         archived: false,
       })
-      setError(
-        'Layout already has rounds — saved as a new layout and archived the old one',
-      )
-      onDone(true)
-      return
+    } else {
+      await storage.save('layouts', { ...layout, name: name.trim(), pars })
     }
-    await storage.save('layouts', { ...layout, name: name.trim(), pars })
-    onDone(false)
+    onDone()
   }
 
-  function setPar(index: number, value: number) {
-    setPars((prev) => prev.map((par, i) => (i === index ? Math.max(1, value) : par)))
+  function bump(index: number) {
+    setPars((prev) => prev.map((par, i) => (i === index ? (par >= MAX_PAR ? MIN_PAR : par + 1) : par)))
+    setChanged(index)
   }
 
   return (
-    <form onSubmit={save}>
-      <input value={name} aria-label="Layout name" onChange={(e) => setName(e.target.value)} />
-      <ol>
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, px: 2, pb: 2 }}>
+      {!used && (
+        <OutlinedInput value={name} onChange={(e) => setName(e.target.value)}
+          inputProps={{ 'aria-label': 'Layout name' }} sx={{ height: 48 }} />
+      )}
+      <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700 }}>
+        Tap a hole to change par · <Box component="span" sx={{ color: 'primary.main' }}>par {parTotal(pars)}</Box>
+      </Typography>
+      <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(6, minmax(0, 1fr))', gap: 0.75 }}>
         {pars.map((par, index) => (
-          <li key={index}>
-            <input
-              type="number"
-              min="1"
-              value={par}
-              aria-label={`Par hole ${index + 1}`}
-              onChange={(e) => setPar(index, Number(e.target.value))}
-            />
-          </li>
+          <ButtonBase
+            key={index}
+            aria-label={`Par hole ${index + 1}: ${par}`}
+            onClick={() => bump(index)}
+            sx={{
+              height: 52, flexDirection: 'column', gap: '1px', borderRadius: '14px', border: 2,
+              borderColor: index === changed ? 'primary.main' : 'surface.elevated', bgcolor: 'surface.elevated',
+            }}
+          >
+            <Typography component="span" sx={{ fontSize: 10, fontWeight: 700, color: 'text.secondary' }}>{index + 1}</Typography>
+            <Typography component="span" sx={{ fontSize: 18, fontWeight: 800, lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>{par}</Typography>
+          </ButtonBase>
         ))}
-      </ol>
-      {error && <p>{error}</p>}
-      <button type="submit">Save layout</button>
-    </form>
+      </Box>
+      {used && (
+        <Box sx={{ display: 'flex', gap: 1, alignItems: 'flex-start', p: '10px 12px', borderRadius: '14px', bgcolor: 'surface.elevated' }}>
+          <Box sx={{ color: 'warning.main', display: 'flex', flex: 'none', mt: '1px' }}>
+            <Icon size={16}><circle cx="12" cy="12" r="9" /><path d="M12 8v5M12 16.5v.5" /></Icon>
+          </Box>
+          <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>
+            This layout has rounds. Saving creates a new {layout.name} and archives this one.
+          </Typography>
+        </Box>
+      )}
+      <Box sx={{ display: 'flex', gap: 1.5 }}>
+        <Button size="small" variant="outlined" onClick={onDelete} sx={{ flex: 1 }}>Delete layout</Button>
+        <Button size="small" onClick={save} sx={{ flex: 1.4 }}>Save layout</Button>
+      </Box>
+    </Box>
   )
 }
 
 export default function CourseDetail() {
   const { courseId } = useParams()
   const storage = useStorage()
+  const navigate = useNavigate()
   const [course, setCourse] = useState<Course | null>(null)
   const [layouts, setLayouts] = useState<Layout[]>([])
+  const [rounds, setRounds] = useState<Round[]>([])
   const [name, setName] = useState('')
   const [location, setLocation] = useState('')
   const [newLayoutName, setNewLayoutName] = useState('')
   const [newLayoutHoles, setNewLayoutHoles] = useState(9)
   const [editingLayoutId, setEditingLayoutId] = useState<string | null>(null)
+  const [sheet, setSheet] = useState<'course' | 'layout' | null>(null)
+  const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null)
 
   const reload = useCallback(async () => {
-    const [found, allLayouts] = await Promise.all([
+    const [found, allLayouts, allRounds] = await Promise.all([
       storage.get('courses', courseId ?? ''),
       storage.list('layouts'),
+      storage.list('rounds'),
     ])
     setCourse(found ?? null)
     setLayouts(allLayouts.filter((l) => l.courseId === courseId))
+    setRounds(allRounds)
     setName(found?.name ?? '')
     setLocation(found?.location ?? '')
   }, [storage, courseId])
@@ -95,117 +155,163 @@ export default function CourseDetail() {
 
   async function save(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
+    if (!name.trim()) return
     await storage.save('courses', {
       ...course,
       name: name.trim(),
       location: location.trim() || undefined,
     })
+    setSheet(null)
     reload()
   }
 
   async function addLayout(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (!newLayoutName.trim()) return
-    await storage.save('layouts', {
+    const created = await storage.save('layouts', {
       courseId,
       name: newLayoutName.trim(),
       pars: Array(newLayoutHoles).fill(DEFAULT_PAR),
     })
     setNewLayoutName('')
     setNewLayoutHoles(9)
-    setEditingLayoutId(null)
+    setEditingLayoutId(created.id)
+    setSheet(null)
     reload()
   }
 
   async function removeLayout(layout: Layout) {
-    const rounds = await storage.list('rounds')
     if (layoutIsReferenced(rounds, layout.id)) {
       await storage.save('layouts', { ...layout, archived: true })
     } else {
       await storage.delete('layouts', layout.id)
     }
+    setEditingLayoutId(null)
     reload()
   }
 
   async function remove() {
+    setMenuAnchor(null)
     if (!course) return
-    const [allLayouts, rounds] = await Promise.all([
-      storage.list('layouts'),
-      storage.list('rounds'),
-    ])
-    const referenced = courseIsReferenced(allLayouts, rounds, course.id)
-    if (referenced) {
+    const allLayouts = await storage.list('layouts')
+    if (courseIsReferenced(allLayouts, rounds, course.id)) {
       await storage.save('courses', { ...course, archived: true })
     } else {
       await storage.delete('courses', course.id)
     }
-    window.history.back()
+    navigate('/courses')
   }
 
-  return (
-    <>
-      <h1>
-        {course.name}
-        {course.archived && <span> (archived)</span>}
-      </h1>
-      <form onSubmit={save}>
-        <input value={name} aria-label="Course name" onChange={(e) => setName(e.target.value)} />
-        <input
-          value={location}
-          placeholder="Location"
-          aria-label="Course location"
-          onChange={(e) => setLocation(e.target.value)}
-        />
-        <button type="submit">Save</button>
-      </form>
-      <button onClick={remove}>Delete</button>
+  const active = layouts.filter((layout) => !layout.archived)
+  const archived = layouts.filter((layout) => layout.archived)
 
-      <h2>Layouts</h2>
-      <form onSubmit={addLayout}>
-        <input
-          value={newLayoutName}
-          placeholder="Layout name"
-          aria-label="Layout name"
-          onChange={(e) => setNewLayoutName(e.target.value)}
-        />
-        <input
-          type="number"
-          min="1"
-          value={newLayoutHoles}
-          aria-label="Hole count"
-          onChange={(e) => setNewLayoutHoles(Number(e.target.value))}
-        />
-        <button type="submit">Add layout</button>
-      </form>
-      <ul>
-        {layouts.length === 0 && <li>No layouts yet</li>}
-        {layouts.map((layout) => (
-          <li key={layout.id}>
-            {layout.name} — {layout.pars.length} holes (par{' '}
-            {layout.pars.reduce((sum, par) => sum + par, 0)})
-            {layout.archived && <span> (archived)</span>}
-            {layout.archived ? null : (
-              <>
-                <button
-                  onClick={() => setEditingLayoutId(editingLayoutId === layout.id ? null : layout.id)}
-                >
-                  {editingLayoutId === layout.id ? 'Close' : 'Edit'}
-                </button>
-                <button onClick={() => removeLayout(layout)}>Delete</button>
-                {editingLayoutId === layout.id && (
-                  <LayoutEditor
-                    layout={layout}
-                    onDone={() => {
-                      reload()
-                    }}
-                  />
-                )}
-              </>
+  return (
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, pb: 3 }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', pt: 0.5, pb: 1 }}>
+        <IconButton component={Link} to="/courses" aria-label="Back to courses">
+          <Icon>{icon.back}</Icon>
+        </IconButton>
+        <IconButton aria-label="Course menu" onClick={(e) => setMenuAnchor(e.currentTarget)}>
+          <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+            <circle cx="5" cy="12" r="1.8" /><circle cx="12" cy="12" r="1.8" /><circle cx="19" cy="12" r="1.8" />
+          </svg>
+        </IconButton>
+        <Menu anchorEl={menuAnchor} open={Boolean(menuAnchor)} onClose={() => setMenuAnchor(null)}>
+          <MenuItem onClick={remove}>Delete course</MenuItem>
+        </Menu>
+      </Box>
+
+      <Box sx={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 1.5 }}>
+        <Box sx={{ minWidth: 0 }}>
+          <Typography variant="h1" sx={{ fontSize: 30, lineHeight: 1.1 }}>{course.name}</Typography>
+          <Typography variant="body1" color="text.secondary" sx={{ mt: 0.5, fontWeight: 600 }}>
+            {[course.location, course.archived && 'Archived'].filter(Boolean).join(' · ')}
+          </Typography>
+        </Box>
+        <Button size="small" variant="outlined" onClick={() => setSheet('course')}
+          startIcon={<Icon size={16}>{icon.edit}</Icon>} sx={{ gap: 0.75, flex: 'none' }}>
+          Edit
+        </Button>
+      </Box>
+
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mt: 1.5 }}>
+        <Typography variant="h4" component="h2">Layouts</Typography>
+        <Button size="small" onClick={() => setSheet('layout')} startIcon={<Icon size={18}>{icon.plus}</Icon>}
+          sx={{ gap: 0.75, pl: 1.25, bgcolor: 'surface.elevated', color: 'primary.main', '&:hover': { bgcolor: 'surface.track' } }}>
+          Add layout
+        </Button>
+      </Box>
+
+      {active.length === 0 && (
+        <Typography variant="body2" color="text.secondary">No layouts yet</Typography>
+      )}
+      {active.map((layout) => {
+        const open = editingLayoutId === layout.id
+        return (
+          <Card key={layout.id}>
+            <ButtonBase
+              aria-expanded={open}
+              onClick={() => setEditingLayoutId(open ? null : layout.id)}
+              sx={{ width: '100%', display: 'flex', alignItems: 'center', gap: 1.5, p: '14px 16px', textAlign: 'left' }}
+            >
+              <Box sx={{ flex: 1, minWidth: 0 }}>
+                <Typography variant="h5" component="span" noWrap sx={{ display: 'block' }}>{layout.name}</Typography>
+                <Typography variant="subtitle2" color="text.secondary">
+                  {layout.pars.length} holes · par {parTotal(layout.pars)}
+                </Typography>
+              </Box>
+              <Box sx={{ color: 'text.secondary', display: 'flex', transform: open ? 'rotate(-90deg)' : 'rotate(90deg)' }}>
+                <Icon size={20}>{icon.chevron}</Icon>
+              </Box>
+            </ButtonBase>
+            {open && (
+              <LayoutEditor
+                key={layout.id}
+                layout={layout}
+                used={layoutIsReferenced(rounds, layout.id)}
+                onDone={() => { setEditingLayoutId(null); reload() }}
+                onDelete={() => removeLayout(layout)}
+              />
             )}
-          </li>
-        ))}
-      </ul>
-      <Link to="/courses">Back</Link>
-    </>
+          </Card>
+        )
+      })}
+
+      {archived.map((layout) => (
+        <Box key={layout.id} sx={{ display: 'flex', alignItems: 'center', gap: 1.5, p: '12px 16px', borderRadius: 6, border: 2, borderStyle: 'dashed', borderColor: 'surface.handle' }}>
+          <Typography variant="subtitle1" color="text.secondary" sx={{ flex: 1, fontWeight: 700 }}>
+            {layout.name} <Box component="span" sx={{ fontWeight: 600 }}>· par {parTotal(layout.pars)}</Box>
+          </Typography>
+          <Typography variant="caption" color="text.secondary" sx={{ px: 1.25, py: 0.5, borderRadius: 999, bgcolor: 'surface.elevated', fontWeight: 700 }}>
+            Archived
+          </Typography>
+        </Box>
+      ))}
+
+      <Sheet open={sheet === 'course'} label="Edit course" onClose={() => setSheet(null)} onSubmit={save}>
+        <OutlinedInput value={name} placeholder="Course name" onChange={(e) => setName(e.target.value)}
+          inputProps={{ 'aria-label': 'Course name' }} sx={{ height: 56 }} />
+        <OutlinedInput value={location} placeholder="Location (optional)" onChange={(e) => setLocation(e.target.value)}
+          inputProps={{ 'aria-label': 'Course location' }} sx={{ height: 56 }} />
+        <Box sx={{ display: 'flex', gap: 1.5 }}>
+          <Button variant="outlined" onClick={() => setSheet(null)} sx={{ flex: 1 }}>Cancel</Button>
+          <Button type="submit" disabled={!name.trim()} sx={{ flex: 1.4 }}>Save</Button>
+        </Box>
+      </Sheet>
+
+      <Sheet open={sheet === 'layout'} label="New layout" onClose={() => setSheet(null)} onSubmit={addLayout}>
+        <OutlinedInput autoFocus value={newLayoutName} placeholder="Layout name" onChange={(e) => setNewLayoutName(e.target.value)}
+          inputProps={{ 'aria-label': 'Layout name' }} sx={{ height: 56 }} />
+        <Box component="label" sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+          <Typography variant="subtitle1" sx={{ flex: 1 }}>Holes</Typography>
+          <OutlinedInput type="number" value={newLayoutHoles} onChange={(e) => setNewLayoutHoles(Math.max(1, Number(e.target.value)))}
+            inputProps={{ min: 1, 'aria-label': 'Hole count' }} sx={{ height: 56, width: 110 }} />
+        </Box>
+        <Box sx={{ display: 'flex', gap: 1.5 }}>
+          <Button variant="outlined" onClick={() => setSheet(null)} sx={{ flex: 1 }}>Cancel</Button>
+          <Button type="submit" disabled={!newLayoutName.trim()} sx={{ flex: 1.4 }}>Add layout</Button>
+        </Box>
+      </Sheet>
+    </Box>
   )
 }

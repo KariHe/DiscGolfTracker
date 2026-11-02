@@ -36,7 +36,7 @@ describe('Courses', () => {
     const course = await storage.save('courses', { name: 'Kivilahti' })
     renderCourses(storage, `/courses/${course.id}`)
 
-    await waitFor(() => expect(screen.getByLabelText('Course name')).toBeTruthy())
+    fireEvent.click(await screen.findByRole('button', { name: 'Edit' }))
     fireEvent.change(screen.getByLabelText('Course name'), { target: { value: 'Kivilahti DGP' } })
     fireEvent.click(screen.getByRole('button', { name: 'Save' }))
     await waitFor(() => expect(screen.getByRole('heading', { name: 'Kivilahti DGP' })).toBeTruthy())
@@ -49,9 +49,8 @@ describe('Courses', () => {
     await storage.save('layouts', { courseId: course.id, name: 'Short 9', pars: [] })
     renderCourses(storage, `/courses/${course.id}`)
 
-    await screen.findByRole('heading', { name: 'Layouts' })
-    // first Delete is the course's own; later ones belong to layouts
-    fireEvent.click(screen.getAllByRole('button', { name: 'Delete' })[0])
+    fireEvent.click(await screen.findByRole('button', { name: 'Course menu' }))
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Delete course' }))
     await waitFor(async () => expect((await storage.get('courses', course.id))?.archived).toBe(true))
   })
 

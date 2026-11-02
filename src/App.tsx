@@ -29,13 +29,13 @@ export default function App() {
         <Route element={<Layout />}>
           <Route index element={<Home />} />
           <Route path="/courses" element={<Courses />} />
-          <Route path="/courses/:courseId" element={<CourseDetail />} />
           <Route path="/players" element={<Players />} />
           <Route path="/history" element={<History />} />
         </Route>
         <Route path="/round/new" element={<RoundStart />} />
         <Route path="/round" element={<Round />} />
         <Route path="/history/:roundId" element={<HistoryDetail />} />
+        <Route path="/courses/:courseId" element={<CourseDetail />} />
       </Routes>
     </AppThemeProvider>
   )
