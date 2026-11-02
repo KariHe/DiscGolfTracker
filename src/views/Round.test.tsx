@@ -32,14 +32,21 @@ describe('Scorekeeper round', () => {
     const { storage } = await seededRound()
     renderAt(storage, '/round/new')
 
-    await waitFor(() => expect(screen.getByRole('button', { name: 'Kivilahti' })).toBeTruthy())
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Select course' })).toBeTruthy())
     const startButton = () => screen.getByRole('button', { name: /^Start round/ }) as HTMLButtonElement
     expect(startButton().disabled).toBe(true)
+    fireEvent.click(screen.getByRole('button', { name: 'Select course' }))
+    fireEvent.change(screen.getByLabelText('Search courses'), { target: { value: 'kivi' } })
     fireEvent.click(screen.getByRole('button', { name: 'Kivilahti' }))
+    await waitFor(() => expect(screen.getByRole('button', { name: /^Short 3/ })).toBeTruthy())
     fireEvent.click(screen.getByRole('button', { name: /^Short 3/ }))
     expect(startButton().disabled).toBe(true)
     fireEvent.click(screen.getByRole('button', { name: 'Kari' }))
     expect(startButton().disabled).toBe(false)
+    fireEvent.change(screen.getByLabelText('New player name'), { target: { value: 'Nadja' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Add player' }))
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Nadja' }).getAttribute('aria-pressed')).toBe('true'))
+    expect(startButton().textContent).toContain('2 players')
     fireEvent.click(screen.getByRole('button', { name: /^Start round/ }))
 
     await waitFor(() => expect(screen.getByRole('heading', { name: 'Kivilahti' })).toBeTruthy())

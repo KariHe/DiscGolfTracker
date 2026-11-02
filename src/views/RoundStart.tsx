@@ -4,6 +4,7 @@ import { Link as RouterLink, useNavigate } from 'react-router'
 import Avatar from '@mui/material/Avatar'
 import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'
+import Dialog from '@mui/material/Dialog'
 import ButtonBase from '@mui/material/ButtonBase'
 import IconButton from '@mui/material/IconButton'
 import Link from '@mui/material/Link'
@@ -36,6 +37,9 @@ export default function RoundStart() {
   const [picked, setPicked] = useState<string[]>([])
   const [date, setDate] = useState(() => new Date().toISOString().slice(0, 10))
   const [note, setNote] = useState('')
+  const [courseOpen, setCourseOpen] = useState(false)
+  const [courseQuery, setCourseQuery] = useState('')
+  const [newPlayer, setNewPlayer] = useState('')
 
   const reload = useCallback(async () => {
     const [allCourses, allLayouts, allPlayers, allRounds] = await Promise.all([
@@ -77,6 +81,27 @@ export default function RoundStart() {
     )
   }
 
+  function pickCourse(id: string) {
+    if (id !== courseId) { setCourseId(id); setLayoutId('') }
+    setCourseOpen(false)
+  }
+
+  async function addPlayer(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    const name = newPlayer.trim()
+    if (!name) return
+    const saved = await storage.save('players', { name })
+    setNewPlayer('')
+    setPlayers((prev) => [...prev, saved])
+    setPicked((prev) => [...prev, saved.id])
+  }
+
+  const selectedCourse = courses.find((c) => c.id === courseId)
+  const query = courseQuery.trim().toLowerCase()
+  const shownCourses = courses.filter(
+    (c) => !query || `${c.name} ${c.location ?? ''}`.toLowerCase().includes(query),
+  )
+
   const lime = theme.palette.primary.main
   const startLabel = picked.length === 1 ? 'Start round · 1 player' : `Start round · ${picked.length} players`
 
@@ -97,36 +122,29 @@ export default function RoundStart() {
               No courses yet — <Link component={RouterLink} to="/courses">add one first</Link>
             </Typography>
           )}
-          {courses.map((course) => {
-            const on = courseId === course.id
-            return (
-              <ButtonBase
-                key={course.id}
-                aria-pressed={on}
-                onClick={() => { setCourseId(course.id); setLayoutId('') }}
-                sx={{
-                  height: 60, px: 2, gap: 1.5, justifyContent: 'flex-start', textAlign: 'left',
-                  borderRadius: `${theme.radius.md}px`, border: 2,
-                  borderColor: on ? 'primary.main' : 'surface.raised',
-                  bgcolor: on ? alpha(lime, 0.08) : 'surface.raised',
-                }}
-              >
-                <Box sx={{ flex: 1, minWidth: 0 }}>
-                  <Typography variant="h6" component="span" noWrap sx={{ display: 'block' }}>{course.name}</Typography>
-                  {course.location && (
-                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block', fontWeight: 600 }}>
-                      {course.location}
-                    </Typography>
-                  )}
-                </Box>
-                <Box aria-hidden="true" sx={{
-                  width: 22, height: 22, borderRadius: '50%', boxSizing: 'border-box', border: 2,
-                  borderColor: on ? 'primary.main' : 'surface.outline',
-                  bgcolor: on ? 'primary.main' : 'transparent',
-                }} />
-              </ButtonBase>
-            )
-          })}
+          {courses.length > 0 && (
+            <ButtonBase
+              onClick={() => { setCourseQuery(''); setCourseOpen(true) }}
+              aria-haspopup="dialog"
+              sx={{
+                height: 60, px: 2, gap: 1.5, justifyContent: 'flex-start', textAlign: 'left',
+                borderRadius: `${theme.radius.md}px`, border: 2, bgcolor: 'surface.raised',
+                borderColor: selectedCourse ? 'primary.main' : 'surface.raised',
+              }}
+            >
+              <Box sx={{ flex: 1, minWidth: 0 }}>
+                <Typography variant="h6" component="span" noWrap sx={{ display: 'block' }} color={selectedCourse ? 'text.primary' : 'text.secondary'}>
+                  {selectedCourse ? selectedCourse.name : 'Select course'}
+                </Typography>
+                {selectedCourse?.location && (
+                  <Typography variant="caption" color="text.secondary" sx={{ display: 'block', fontWeight: 600 }}>
+                    {selectedCourse.location}
+                  </Typography>
+                )}
+              </Box>
+              <Icon>{icon.chevron}</Icon>
+            </ButtonBase>
+          )}
         </Box>
 
         {courseId && (
@@ -196,6 +214,21 @@ export default function RoundStart() {
               )
             })}
           </Box>
+          <Box component="form" onSubmit={addPlayer} sx={{ display: 'flex', gap: 1 }}>
+            <OutlinedInput
+              value={newPlayer}
+              onChange={(e) => setNewPlayer(e.target.value)}
+              placeholder="Add a player"
+              inputProps={{ 'aria-label': 'New player name' }}
+              sx={{ flex: 1, height: 48 }}
+            />
+            <IconButton type="submit" aria-label="Add player" sx={{
+              width: 48, height: 48, bgcolor: 'primary.main', color: 'primary.contrastText',
+              '&:hover': { bgcolor: 'primary.light' },
+            }}>
+              <Icon size={22}>{icon.plus}</Icon>
+            </IconButton>
+          </Box>
         </Box>
 
         <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 1.5 }}>
@@ -227,6 +260,49 @@ export default function RoundStart() {
           {startLabel}
         </Button>
       </Box>
+
+      <Dialog open={courseOpen} onClose={() => setCourseOpen(false)} fullWidth maxWidth="sm" aria-label="Select course">
+        <Box sx={{ p: 2, display: 'flex', flexDirection: 'column', gap: 1.5, height: '70vh' }}>
+          <OutlinedInput
+            autoFocus
+            value={courseQuery}
+            onChange={(e) => setCourseQuery(e.target.value)}
+            placeholder="Search courses"
+            inputProps={{ 'aria-label': 'Search courses' }}
+            sx={{ height: 52, flexShrink: 0 }}
+          />
+          <Box sx={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 1 }}>
+            {shownCourses.length === 0 && (
+              <Typography variant="body2" color="text.secondary">No matching courses</Typography>
+            )}
+            {shownCourses.map((course) => {
+              const on = courseId === course.id
+              return (
+                <ButtonBase
+                  key={course.id}
+                  aria-pressed={on}
+                  onClick={() => pickCourse(course.id)}
+                  sx={{
+                    minHeight: 60, px: 2, gap: 1.5, flexShrink: 0, justifyContent: 'flex-start', textAlign: 'left',
+                    borderRadius: `${theme.radius.md}px`, border: 2,
+                    borderColor: on ? 'primary.main' : 'surface.raised',
+                    bgcolor: on ? alpha(lime, 0.08) : 'surface.raised',
+                  }}
+                >
+                  <Box sx={{ flex: 1, minWidth: 0 }}>
+                    <Typography variant="h6" component="span" noWrap sx={{ display: 'block' }}>{course.name}</Typography>
+                    {course.location && (
+                      <Typography variant="caption" color="text.secondary" sx={{ display: 'block', fontWeight: 600 }}>
+                        {course.location}
+                      </Typography>
+                    )}
+                  </Box>
+                </ButtonBase>
+              )
+            })}
+          </Box>
+        </Box>
+      </Dialog>
     </Box>
   )
 }
