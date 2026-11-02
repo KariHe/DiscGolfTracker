@@ -1,6 +1,6 @@
 import 'fake-indexeddb/auto'
-import { createIndexedDbStorage } from './indexed-db.js'
-import { runPortConformanceSuite } from './port.js'
+import { createIndexedDbStorage } from './indexed-db.ts'
+import { runPortConformanceSuite } from './port.ts'
 
 let dbCounter = 0
 

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { createStorageFromEnv } from './index.js'
+import { createStorageFromEnv } from './index.ts'
 
 describe('createStorageFromEnv', () => {
   it('returns a ready storage adapter for the default backend, not a promise', () => {

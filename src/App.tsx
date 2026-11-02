@@ -1,12 +1,12 @@
 import { Link, Outlet, Route, Routes } from 'react-router'
-import Home from './views/Home.jsx'
-import Round from './views/Round.jsx'
-import RoundStart from './views/RoundStart.jsx'
-import Courses from './views/Courses.jsx'
-import CourseDetail from './views/CourseDetail.jsx'
-import Players from './views/Players.jsx'
-import History from './views/History.jsx'
-import HistoryDetail from './views/HistoryDetail.jsx'
+import Home from './views/Home.tsx'
+import Round from './views/Round.tsx'
+import RoundStart from './views/RoundStart.tsx'
+import Courses from './views/Courses.tsx'
+import CourseDetail from './views/CourseDetail.tsx'
+import Players from './views/Players.tsx'
+import History from './views/History.tsx'
+import HistoryDetail from './views/HistoryDetail.tsx'
 
 function Layout() {
   return (

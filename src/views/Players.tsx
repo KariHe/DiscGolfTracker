@@ -1,12 +1,14 @@
 import { useCallback, useEffect, useState } from 'react'
-import { useStorage } from '../storage/useStorage.js'
-import { playerIsReferenced } from '../domain/records.js'
+import type { FormEvent } from 'react'
+import { useStorage } from '../storage/useStorage.ts'
+import { playerIsReferenced } from '../domain/records.ts'
+import type { Player } from '../domain/types.ts'
 
 export default function Players() {
   const storage = useStorage()
-  const [players, setPlayers] = useState([])
+  const [players, setPlayers] = useState<Player[]>([])
   const [name, setName] = useState('')
-  const [editingId, setEditingId] = useState(null)
+  const [editingId, setEditingId] = useState<string | null>(null)
   const [editName, setEditName] = useState('')
 
   const reload = useCallback(async () => {
@@ -18,7 +20,7 @@ export default function Players() {
     reload()
   }, [reload])
 
-  async function addPlayer(event) {
+  async function addPlayer(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (!name.trim()) return
     await storage.save('players', { name: name.trim() })
@@ -26,21 +28,22 @@ export default function Players() {
     reload()
   }
 
-  function startEdit(player) {
+  function startEdit(player: Player) {
     setEditingId(player.id)
     setEditName(player.name)
   }
 
-  async function saveEdit(event) {
+  async function saveEdit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (!editName.trim()) return
     const player = players.find((p) => p.id === editingId)
+    if (!player) return
     await storage.save('players', { ...player, name: editName.trim() })
     setEditingId(null)
     reload()
   }
 
-  async function remove(player) {
+  async function remove(player: Player) {
     const rounds = await storage.list('rounds')
     if (playerIsReferenced(rounds, player.id)) {
       await storage.save('players', { ...player, archived: true })

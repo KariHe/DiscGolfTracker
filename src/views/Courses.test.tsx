@@ -1,10 +1,11 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router'
-import App from '../App.jsx'
-import { createMemoryStorage } from '../storage/memory.js'
-import { StorageProvider } from '../storage/StorageProvider.jsx'
+import App from '../App.tsx'
+import type { Storage } from '../storage/port.ts'
+import { createMemoryStorage } from '../storage/memory.ts'
+import { StorageProvider } from '../storage/StorageProvider.tsx'
 
-function renderCourses(storage, entry = '/courses') {
+function renderCourses(storage: Storage, entry: string = '/courses') {
   return render(
     <StorageProvider storage={storage}>
       <MemoryRouter initialEntries={[entry]}>
@@ -38,7 +39,7 @@ describe('Courses', () => {
     fireEvent.change(screen.getByLabelText('Course name'), { target: { value: 'Kivilahti DGP' } })
     fireEvent.click(screen.getByRole('button', { name: 'Save' }))
     await waitFor(() => expect(screen.getByRole('heading', { name: 'Kivilahti DGP' })).toBeTruthy())
-    expect((await storage.get('courses', course.id)).name).toBe('Kivilahti DGP')
+    expect((await storage.get('courses', course.id))?.name).toBe('Kivilahti DGP')
   })
 
   it('deletes an unreferenced course and archives one with layouts', async () => {
@@ -52,6 +53,6 @@ describe('Courses', () => {
     )
     fireEvent.click(screen.getByRole('button', { name: 'Delete' }))
     await waitFor(() => expect(screen.getByText('(archived)')).toBeTruthy())
-    expect((await storage.get('courses', course.id)).archived).toBe(true)
+    expect((await storage.get('courses', course.id))?.archived).toBe(true)
   })
 })

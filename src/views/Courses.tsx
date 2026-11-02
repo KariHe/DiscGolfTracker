@@ -1,11 +1,13 @@
 import { useCallback, useEffect, useState } from 'react'
+import type { FormEvent } from 'react'
 import { Link } from 'react-router'
-import { useStorage } from '../storage/useStorage.js'
-import { courseIsReferenced } from '../domain/records.js'
+import { useStorage } from '../storage/useStorage.ts'
+import { courseIsReferenced } from '../domain/records.ts'
+import type { Course } from '../domain/types.ts'
 
 export default function Courses() {
   const storage = useStorage()
-  const [courses, setCourses] = useState([])
+  const [courses, setCourses] = useState<Course[]>([])
   const [name, setName] = useState('')
   const [location, setLocation] = useState('')
 
@@ -18,7 +20,7 @@ export default function Courses() {
     reload()
   }, [reload])
 
-  async function addCourse(event) {
+  async function addCourse(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (!name.trim()) return
     await storage.save('courses', {
@@ -30,7 +32,7 @@ export default function Courses() {
     reload()
   }
 
-  async function remove(course) {
+  async function remove(course: Course) {
     const [layouts, rounds] = await Promise.all([
       storage.list('layouts'),
       storage.list('rounds'),

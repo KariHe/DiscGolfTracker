@@ -1,13 +1,14 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router'
-import { useStorage } from '../storage/useStorage.js'
-import { playerTotals, formatVsPar } from '../domain/scores.js'
+import { useStorage } from '../storage/useStorage.ts'
+import { playerTotals, formatVsPar } from '../domain/scores.ts'
+import type { Layout, Player, Round } from '../domain/types.ts'
 
 export default function History() {
   const storage = useStorage()
-  const [rounds, setRounds] = useState([])
-  const [layouts, setLayouts] = useState([])
-  const [players, setPlayers] = useState([])
+  const [rounds, setRounds] = useState<Round[]>([])
+  const [layouts, setLayouts] = useState<Layout[]>([])
+  const [players, setPlayers] = useState<Player[]>([])
 
   const reload = useCallback(async () => {
     const [allRounds, allLayouts, allPlayers] = await Promise.all([
@@ -38,7 +39,7 @@ export default function History() {
                 const player = players.find((candidate) => candidate.id === playerId)
                 if (!player) return null
                 const layout = layouts.find((l) => l.id === round.layoutId)
-                const { total, vsPar } = playerTotals(round, player.id, layout)
+                const { total, vsPar } = playerTotals(round, player.id, layout ?? null)
                 const formatted = formatVsPar(vsPar)
                 return (
                   <li key={playerId}>

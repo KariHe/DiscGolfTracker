@@ -1,18 +1,21 @@
+import type { RecordOf, Round } from '../domain/types.ts'
+import type { Storage } from './port.ts'
+
 /**
  * IndexedDB adapter of the storage port (ADR-0001).
- * One object store per kind with keyPath "id"; same semantics as memory.js:
- * save.assigns an id when absent, get/list/delete per kind, and at most one
+ * One object store per kind with keyPath "id"; same semantics as memory.ts:
+ * save assigns an id when absent, get/list/delete per kind, and at most one
  * unfinished round (the Active Round, port rule).
  */
-const KINDS = ['courses', 'layouts', 'players', 'rounds']
+const KINDS = ['courses', 'layouts', 'players', 'rounds'] as const
 
 const uuid = () =>
   typeof crypto !== 'undefined' && crypto.randomUUID
     ? crypto.randomUUID()
     : 'id-' + Math.random().toString(36).slice(2) + Date.now().toString(36)
 
-function openDb(dbName = 'discgolf') {
-  return new Promise((resolve, reject) => {
+function openDb(dbName: string = 'discgolf') {
+  return new Promise<IDBDatabase>((resolve, reject) => {
     const request = indexedDB.open(dbName, 1)
     request.onupgradeneeded = () => {
       for (const kind of KINDS) {
@@ -26,21 +29,25 @@ function openDb(dbName = 'discgolf') {
   })
 }
 
-function awaitRequest(request) {
+function awaitRequest<T>(request: IDBRequest<T>): Promise<T> {
   return new Promise((resolve, reject) => {
     request.onsuccess = () => resolve(request.result)
     request.onerror = () => reject(request.error)
   })
 }
 
-export function createIndexedDbStorage({ dbName } = {}) {
-  let dbPromise = null
+export function createIndexedDbStorage({ dbName }: { dbName?: string } = {}): Storage {
+  let dbPromise: Promise<IDBDatabase> | null = null
   const db = () => {
     if (!dbPromise) dbPromise = openDb(dbName)
     return dbPromise
   }
 
-  async function withStore(kind, mode, operation) {
+  async function withStore<R>(
+    kind: keyof RecordOf,
+    mode: IDBTransactionMode,
+    operation: (store: IDBObjectStore, transaction: IDBTransaction) => R,
+  ): Promise<R> {
     const database = await db()
     const transaction = database.transaction(kind, mode)
     const result = await operation(transaction.objectStore(kind), transaction)
@@ -54,21 +61,29 @@ export function createIndexedDbStorage({ dbName } = {}) {
   return {
     async save(kind, record) {
       return withStore(kind, 'readwrite', async (store) => {
-        if (kind === 'rounds' && record.finished !== true) {
+        if (kind === 'rounds' && (record as Partial<Round>).finished !== true) {
           const all = await awaitRequest(store.getAll())
-          const active = all.find((other) => other.finished !== true && other.id !== record.id)
-          if (active) throw new Error(`active round already exists (${active.id})`)
+          const active = all.find(
+            (other) => (other as Partial<Round>).finished !== true && (other as { id?: string }).id !== record.id,
+          )
+          if (active) throw new Error(`active round already exists (${(active as { id: string }).id})`)
         }
-        const saved = record.id ? { ...record } : { ...record, id: uuid() }
+        const saved = (record.id
+          ? { ...record }
+          : { ...record, id: uuid() }) as unknown as RecordOf[typeof kind]
         await awaitRequest(store.put(saved))
         return saved
       })
     },
     async list(kind) {
-      return withStore(kind, 'readonly', async (store) => await awaitRequest(store.getAll()))
+      return withStore(kind, 'readonly', async (store) =>
+        (await awaitRequest(store.getAll())) as RecordOf[typeof kind][],
+      )
     },
     async get(kind, id) {
-      return withStore(kind, 'readonly', async (store) => await awaitRequest(store.get(id)))
+      return withStore(kind, 'readonly', async (store) =>
+        (await awaitRequest(store.get(id))) as RecordOf[typeof kind] | undefined,
+      )
     },
     async delete(kind, id) {
       return withStore(kind, 'readwrite', async (store) => {

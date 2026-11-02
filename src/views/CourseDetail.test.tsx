@@ -1,10 +1,11 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router'
-import App from '../App.jsx'
-import { createMemoryStorage } from '../storage/memory.js'
-import { StorageProvider } from '../storage/StorageProvider.jsx'
+import App from '../App.tsx'
+import type { Storage } from '../storage/port.ts'
+import { createMemoryStorage } from '../storage/memory.ts'
+import { StorageProvider } from '../storage/StorageProvider.tsx'
 
-function renderCourseDetail(storage, courseId) {
+function renderCourseDetail(storage: Storage, courseId: string) {
   return render(
     <StorageProvider storage={storage}>
       <MemoryRouter initialEntries={[`/courses/${courseId}`]}>
@@ -61,10 +62,10 @@ describe('Layout management', () => {
     await waitFor(async () => {
       const layouts = await storage.list('layouts')
       expect(layouts).toHaveLength(2)
-      const old = layouts.find((l) => l.id === layout.id)
+      const old = layouts.find((l) => l.id === layout.id)!
       expect(old.pars).toEqual([3, 4, 3]) // untouched
       expect(old.archived).toBe(true)
-      const fresh = layouts.find((l) => l.id !== layout.id)
+      const fresh = layouts.find((l) => l.id !== layout.id)!
       expect(fresh.name).toBe('Championship 18') // same display name
       expect(fresh.pars).toEqual([4, 4, 3]) // edited
       expect(fresh.archived).toBe(false)

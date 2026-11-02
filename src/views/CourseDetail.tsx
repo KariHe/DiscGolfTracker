@@ -1,18 +1,20 @@
 import { useCallback, useEffect, useState } from 'react'
+import type { FormEvent } from 'react'
 import { Link, useParams } from 'react-router'
-import { useStorage } from '../storage/useStorage.js'
-import { courseIsReferenced, layoutIsReferenced } from '../domain/records.js'
+import { useStorage } from '../storage/useStorage.ts'
+import { courseIsReferenced, layoutIsReferenced } from '../domain/records.ts'
+import type { Course, Layout } from '../domain/types.ts'
 
 /** Par change when adding holes; standard mid-adjustment default. */
 const DEFAULT_PAR = 3
 
-function LayoutEditor({ layout, onDone }) {
+function LayoutEditor({ layout, onDone }: { layout: Layout; onDone: (archived: boolean) => void }) {
   const storage = useStorage()
   const [name, setName] = useState(layout.name)
-  const [pars, setPars] = useState(layout.pars)
-  const [error, setError] = useState(null)
+  const [pars, setPars] = useState<number[]>(layout.pars)
+  const [error, setError] = useState<string | null>(null)
 
-  async function save(event) {
+  async function save(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (!name.trim()) return
     const rounds = await storage.list('rounds')
@@ -37,7 +39,7 @@ function LayoutEditor({ layout, onDone }) {
     onDone(false)
   }
 
-  function setPar(index, value) {
+  function setPar(index: number, value: number) {
     setPars((prev) => prev.map((par, i) => (i === index ? Math.max(1, value) : par)))
   }
 
@@ -66,20 +68,20 @@ function LayoutEditor({ layout, onDone }) {
 export default function CourseDetail() {
   const { courseId } = useParams()
   const storage = useStorage()
-  const [course, setCourse] = useState(null)
-  const [layouts, setLayouts] = useState([])
+  const [course, setCourse] = useState<Course | null>(null)
+  const [layouts, setLayouts] = useState<Layout[]>([])
   const [name, setName] = useState('')
   const [location, setLocation] = useState('')
   const [newLayoutName, setNewLayoutName] = useState('')
   const [newLayoutHoles, setNewLayoutHoles] = useState(9)
-  const [editingLayoutId, setEditingLayoutId] = useState(null)
+  const [editingLayoutId, setEditingLayoutId] = useState<string | null>(null)
 
   const reload = useCallback(async () => {
     const [found, allLayouts] = await Promise.all([
-      storage.get('courses', courseId),
+      storage.get('courses', courseId ?? ''),
       storage.list('layouts'),
     ])
-    setCourse(found)
+    setCourse(found ?? null)
     setLayouts(allLayouts.filter((l) => l.courseId === courseId))
     setName(found?.name ?? '')
     setLocation(found?.location ?? '')
@@ -91,7 +93,7 @@ export default function CourseDetail() {
 
   if (!course) return null
 
-  async function save(event) {
+  async function save(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     await storage.save('courses', {
       ...course,
@@ -101,7 +103,7 @@ export default function CourseDetail() {
     reload()
   }
 
-  async function addLayout(event) {
+  async function addLayout(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (!newLayoutName.trim()) return
     await storage.save('layouts', {
@@ -115,7 +117,7 @@ export default function CourseDetail() {
     reload()
   }
 
-  async function removeLayout(layout) {
+  async function removeLayout(layout: Layout) {
     const rounds = await storage.list('rounds')
     if (layoutIsReferenced(rounds, layout.id)) {
       await storage.save('layouts', { ...layout, archived: true })
@@ -126,6 +128,7 @@ export default function CourseDetail() {
   }
 
   async function remove() {
+    if (!course) return
     const [allLayouts, rounds] = await Promise.all([
       storage.list('layouts'),
       storage.list('rounds'),

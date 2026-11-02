@@ -1,10 +1,12 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router'
-import App from '../App.jsx'
-import { createMemoryStorage } from '../storage/memory.js'
-import { StorageProvider } from '../storage/StorageProvider.jsx'
+import App from '../App.tsx'
+import type { Storage } from '../storage/port.ts'
+import type { Layout, Round } from '../domain/types.ts'
+import { createMemoryStorage } from '../storage/memory.ts'
+import { StorageProvider } from '../storage/StorageProvider.tsx'
 
-function renderAt(storage, entry) {
+function renderAt(storage: Storage, entry: string) {
   return render(
     <StorageProvider storage={storage}>
       <MemoryRouter initialEntries={[entry]}>
@@ -14,7 +16,7 @@ function renderAt(storage, entry) {
   )
 }
 
-async function seededHistory(options = {}) {
+async function seededHistory(options: { note?: string; noScores?: boolean } = {}) {
   const storage = createMemoryStorage()
   const course = await storage.save('courses', { name: 'Kivilahti' })
   const layout = await storage.save('layouts', {
@@ -87,15 +89,15 @@ describe('Round lifecycle', () => {
 
     await waitFor(async () => {
       const saved = await storage.get('rounds', round.id)
-      expect(saved.scores[round.playerIds[0]]).toEqual([2, 5])
-      expect(saved.note).toBe('windy')
-      expect(saved.date).toBe('2026-10-16')
+      expect(saved?.scores?.[round.playerIds?.[0] as string]).toEqual([2, 5])
+      expect(saved?.note).toBe('windy')
+      expect(saved?.date).toBe('2026-10-16')
     })
   })
 
   it('deletes a finished round, which re-opens hard-delete of its references', async () => {
     const { storage, round, player, course } = await seededHistory()
-    const layoutUsed = await storage.get('layouts', round.layoutId)
+    const layoutUsed = await storage.get('layouts', round.layoutId as string)
     vi.stubGlobal("confirm", () => true)
     renderAt(storage, `/history/${round.id}`)
 
@@ -109,11 +111,11 @@ describe('Round lifecycle', () => {
     // with nothing referencing them, the Player and Layout are hard-deletable;
     // the Course stays blocked while it still offers the Layout (ticket 02 rule)
     const { playerIsReferenced, layoutIsReferenced, courseIsReferenced } =
-      await import('../domain/records.js')
-    const rounds = []
+      await import('../domain/records.ts')
+    const rounds: Round[] = []
     expect(playerIsReferenced(rounds, player.id)).toBe(false)
-    expect(layoutIsReferenced(rounds, layoutUsed.id)).toBe(false)
-    expect(courseIsReferenced([layoutUsed], rounds, course.id)).toBe(true)
+    expect(layoutIsReferenced(rounds, layoutUsed?.id as string)).toBe(false)
+    expect(courseIsReferenced([layoutUsed as Layout], rounds, course.id)).toBe(true)
   })
 
   it('shows Round not found for a missing round id', async () => {

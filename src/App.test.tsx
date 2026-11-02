@@ -1,8 +1,8 @@
 import { fireEvent, render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router'
-import { StorageProvider } from './storage/StorageProvider.jsx'
-import { createMemoryStorage } from './storage/memory.js'
-import App from './App.jsx'
+import { StorageProvider } from './storage/StorageProvider.tsx'
+import { createMemoryStorage } from './storage/memory.ts'
+import App from './App.tsx'
 
 function renderApp(initialEntry = '/') {
   return render(

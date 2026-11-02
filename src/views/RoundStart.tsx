@@ -1,16 +1,18 @@
 import { useCallback, useEffect, useState } from 'react'
+import type { FormEvent, MouseEvent } from 'react'
 import { useNavigate } from 'react-router'
-import { useStorage } from '../storage/useStorage.js'
+import { useStorage } from '../storage/useStorage.ts'
+import type { Course, Layout, Player } from '../domain/types.ts'
 
 export default function RoundStart() {
   const storage = useStorage()
   const navigate = useNavigate()
-  const [courses, setCourses] = useState([])
-  const [layouts, setLayouts] = useState([])
-  const [players, setPlayers] = useState([])
+  const [courses, setCourses] = useState<Course[]>([])
+  const [layouts, setLayouts] = useState<Layout[]>([])
+  const [players, setPlayers] = useState<Player[]>([])
   const [courseId, setCourseId] = useState('')
   const [layoutId, setLayoutId] = useState('')
-  const [picked, setPicked] = useState([])
+  const [picked, setPicked] = useState<string[]>([])
   const [date, setDate] = useState(() => new Date().toISOString().slice(0, 10))
   const [note, setNote] = useState('')
 
@@ -35,7 +37,7 @@ export default function RoundStart() {
 
   const courseLayouts = layouts.filter((layout) => layout.courseId === courseId)
 
-  async function start(event) {
+  async function start(event: FormEvent<HTMLFormElement> | MouseEvent<HTMLButtonElement>) {
     event.preventDefault()
     await storage.save('rounds', {
       date,
@@ -48,7 +50,7 @@ export default function RoundStart() {
     navigate('/round')
   }
 
-  function togglePlayer(playerId) {
+  function togglePlayer(playerId: string) {
     setPicked((prev) =>
       prev.includes(playerId) ? prev.filter((id) => id !== playerId) : [...prev, playerId],
     )

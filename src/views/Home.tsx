@@ -1,10 +1,11 @@
 import { Link } from 'react-router'
-import { useStorage } from '../storage/useStorage.js'
+import { useStorage } from '../storage/useStorage.ts'
 import { useEffect, useState } from 'react'
+import type { Round } from '../domain/types.ts'
 
 export default function Home() {
   const storage = useStorage()
-  const [activeRound, setActiveRound] = useState(null)
+  const [activeRound, setActiveRound] = useState<Round | null>(null)
 
   useEffect(() => {
     storage.list('rounds').then((rounds) => {

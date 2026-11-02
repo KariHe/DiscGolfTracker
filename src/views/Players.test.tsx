@@ -1,10 +1,11 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router'
-import App from '../App.jsx'
-import { createMemoryStorage } from '../storage/memory.js'
-import { StorageProvider } from '../storage/StorageProvider.jsx'
+import App from '../App.tsx'
+import type { Storage } from '../storage/port.ts'
+import { createMemoryStorage } from '../storage/memory.ts'
+import { StorageProvider } from '../storage/StorageProvider.tsx'
 
-function renderPlayers(storage) {
+function renderPlayers(storage: Storage) {
   return render(
     <StorageProvider storage={storage}>
       <MemoryRouter initialEntries={['/players']}>

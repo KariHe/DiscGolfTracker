@@ -1,15 +1,18 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { Link, useNavigate } from 'react-router'
-import { useStorage } from '../storage/useStorage.js'
-import { playerTotals, formatVsPar } from '../domain/scores.js'
+import { Link, useNavigate, useSearchParams } from 'react-router'
+import RoundPrototype from './Round.prototype.tsx'
+import { useStorage } from '../storage/useStorage.ts'
+import { playerTotals, formatVsPar } from '../domain/scores.ts'
+import type { Layout, Player, Round } from '../domain/types.ts'
 
 export default function Round() {
   const storage = useStorage()
   const navigate = useNavigate()
-  const [round, setRound] = useState(null)
-  const roundRef = useRef(null)
-  const [layout, setLayout] = useState(null)
-  const [players, setPlayers] = useState([])
+  const [round, setRound] = useState<Round | null>(null)
+  const roundRef = useRef<Round | null>(null)
+  const [layout, setLayout] = useState<Layout | null>(null)
+  const [players, setPlayers] = useState<Player[]>([])
+  const [searchParams] = useSearchParams()
 
   const reload = useCallback(async () => {
     const [allRounds, allLayouts, allPlayers] = await Promise.all([
@@ -28,7 +31,7 @@ export default function Round() {
     reload()
   }, [reload])
 
-  function paddedStrokes(strokesOfPlayer, holeIndex) {
+  function paddedStrokes(strokesOfPlayer: (number | undefined)[], holeIndex: number) {
     if (strokesOfPlayer.length > holeIndex) return strokesOfPlayer
     return [
       ...strokesOfPlayer,
@@ -36,10 +39,11 @@ export default function Round() {
     ]
   }
 
-  async function setScore(playerId, holeIndex, rawValue) {
+  async function setScore(playerId: string, holeIndex: number, rawValue: string) {
     // work from the ref so rapid edits never base on a stale round state
     const current = roundRef.current
-    const padded = paddedStrokes(current.scores[playerId], holeIndex)
+    if (!current) return
+    const padded = paddedStrokes(current.scores?.[playerId] ?? [], holeIndex)
     const typed =
       rawValue === '' ? undefined : Math.max(0, Number(rawValue))
     const next = {
@@ -55,14 +59,18 @@ export default function Round() {
   }
 
   async function finish() {
-    const finished = { ...roundRef.current, finished: true }
+    const current = roundRef.current
+    if (!current) return
+    const finished = { ...current, finished: true }
     await storage.save('rounds', finished)
     navigate('/history')
   }
 
   async function deleteActive() {
+    const current = roundRef.current
+    if (!current) return
     if (!window.confirm('Delete active round?')) return
-    await storage.delete('rounds', roundRef.current.id)
+    await storage.delete('rounds', current.id)
     navigate('/')
   }
 
@@ -73,6 +81,13 @@ export default function Round() {
         <Link to="/round/new">Start a round</Link>
       </>
     )
+  }
+
+  // PROTOTYPE: touch-first redesign variants live at ?variant= (A/B/C; "0" is
+  // this table). Throwaway — scores there are local-only and never persisted.
+  const protoVariant = import.meta.env.DEV ? searchParams.get('variant') : null
+  if (protoVariant) {
+    return <RoundPrototype round={round} layout={layout} players={players} />
   }
 
   return (
@@ -104,7 +119,7 @@ export default function Round() {
                     <input
                       type="number"
                       min="0"
-                      value={round.scores[player.id][hole] ?? ''}
+                      value={round.scores?.[player.id]?.[hole] ?? ''}
                       aria-label={`${player.name} strokes hole ${hole + 1}`}
                       onChange={(e) => setScore(player.id, hole, e.target.value)}
                     />
