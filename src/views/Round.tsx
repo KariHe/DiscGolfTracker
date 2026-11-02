@@ -15,40 +15,14 @@ import MenuItem from '@mui/material/MenuItem'
 import Typography from '@mui/material/Typography'
 import { useTheme } from '@mui/material/styles'
 import { useStorage } from '../storage/useStorage.ts'
-import { playerTotals, formatVsPar, scoreName } from '../domain/scores.ts'
+import { firstIncompleteHole, playerTotals, formatVsPar, scoreName } from '../domain/scores.ts'
 import type { Course, Layout, Player, Round } from '../domain/types.ts'
 import { playerTint, scoreColor } from '../theme'
+import { Icon } from '../components/Icon.tsx'
+import { icon } from '../components/icons.tsx'
 
 const WHEEL_ITEM = 56
 const WHEEL_MAX = 10
-
-const icon = {
-  back: <path d="M15 18l-6-6 6-6" />,
-  scorecard: (
-    <>
-      <rect x="4" y="4" width="16" height="16" rx="3" />
-      <path d="M4 10h16M10 4v16" />
-    </>
-  ),
-  arrow: <path d="M5 12h14M13 6l6 6-6 6" />,
-  updown: <path d="M7 9l5-5 5 5M7 15l5 5 5-5" />,
-}
-
-function Icon({ children, size = 22 }: { children: React.ReactNode; size?: number }) {
-  return (
-    <svg aria-hidden="true" width={size} height={size} viewBox="0 0 24 24" fill="none"
-      stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-      {children}
-    </svg>
-  )
-}
-
-function firstIncompleteHole(round: Round, layout: Layout): number {
-  const ids = round.playerIds ?? []
-  const index = layout.pars.findIndex((_, hole) =>
-    ids.some((id) => typeof round.scores?.[id]?.[hole] !== 'number'))
-  return index === -1 ? layout.pars.length - 1 : index
-}
 
 export default function Round() {
   const storage = useStorage()

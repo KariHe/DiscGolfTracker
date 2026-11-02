@@ -1,4 +1,5 @@
-import { Link, Outlet, Route, Routes } from 'react-router'
+import { Outlet, Route, Routes } from 'react-router'
+import Box from '@mui/material/Box'
 import Home from './views/Home.tsx'
 import Round from './views/Round.tsx'
 import RoundStart from './views/RoundStart.tsx'
@@ -7,24 +8,23 @@ import CourseDetail from './views/CourseDetail.tsx'
 import Players from './views/Players.tsx'
 import History from './views/History.tsx'
 import HistoryDetail from './views/HistoryDetail.tsx'
+import { TabBar } from './components/TabBar.tsx'
+import { AppThemeProvider } from './theme/AppThemeProvider.tsx'
 
 function Layout() {
   return (
-    <>
-      <nav className="app-nav">
-        <Link to="/">Home</Link>
-        <Link to="/courses">Courses</Link>
-        <Link to="/players">Players</Link>
-        <Link to="/history">History</Link>
-      </nav>
-      <Outlet />
-    </>
+    <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: 'calc(100dvh - 2rem)' }}>
+      <Box sx={{ flex: 1 }}>
+        <Outlet />
+      </Box>
+      <TabBar />
+    </Box>
   )
 }
 
 export default function App() {
   return (
-    <div id="root-app">
+    <AppThemeProvider>
       <Routes>
         <Route element={<Layout />}>
           <Route index element={<Home />} />
@@ -37,6 +37,6 @@ export default function App() {
         </Route>
         <Route path="/round" element={<Round />} />
       </Routes>
-    </div>
+    </AppThemeProvider>
   )
 }

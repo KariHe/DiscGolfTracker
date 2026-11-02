@@ -3,11 +3,3 @@
   margin: 0 auto;
   padding: 1rem;
 }
-
-nav.app-nav {
-  display: flex;
-  gap: 1rem;
-  border-bottom: 1px solid #ccc;
-  padding-bottom: 0.5rem;
-  margin-bottom: 1rem;
-}

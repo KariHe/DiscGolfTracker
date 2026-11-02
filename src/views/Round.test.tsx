@@ -4,13 +4,12 @@ import App from '../App.tsx'
 import type { Storage } from '../storage/port.ts'
 import { createMemoryStorage } from '../storage/memory.ts'
 import { StorageProvider } from '../storage/StorageProvider.tsx'
-import { AppThemeProvider } from '../theme/AppThemeProvider.tsx'
 
 function renderAt(storage: Storage, entry: string) {
   return render(
     <StorageProvider storage={storage}>
       <MemoryRouter initialEntries={[entry]}>
-        <AppThemeProvider><App /></AppThemeProvider>
+        <App />
       </MemoryRouter>
     </StorageProvider>,
   )

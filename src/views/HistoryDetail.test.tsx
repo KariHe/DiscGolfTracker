@@ -5,13 +5,12 @@ import type { Storage } from '../storage/port.ts'
 import type { Layout, Round } from '../domain/types.ts'
 import { createMemoryStorage } from '../storage/memory.ts'
 import { StorageProvider } from '../storage/StorageProvider.tsx'
-import { AppThemeProvider } from '../theme/AppThemeProvider.tsx'
 
 function renderAt(storage: Storage, entry: string) {
   return render(
     <StorageProvider storage={storage}>
       <MemoryRouter initialEntries={[entry]}>
-        <AppThemeProvider><App /></AppThemeProvider>
+        <App />
       </MemoryRouter>
     </StorageProvider>,
   )
@@ -55,7 +54,7 @@ describe('Round lifecycle', () => {
     )
     fireEvent.click(screen.getByRole('button', { name: 'Round menu' }))
     fireEvent.click(screen.getByRole('menuitem', { name: 'Delete active round' }))
-    await waitFor(() => expect(screen.getByRole('heading', { name: 'Home' })).toBeTruthy())
+    await waitFor(() => expect(screen.getByRole('heading', { name: /Let.s play/ })).toBeTruthy())
     expect(await storage.get('rounds', active.id)).toBeUndefined()
   })
 

@@ -1,4 +1,4 @@
-import type { Layout } from './types.ts'
+import type { Layout, Round } from './types.ts'
 
 /**
  * Score computations shared by the Scorekeeper table and the History.
@@ -43,4 +43,12 @@ export function scoreName(strokes: number, par: number): string {
   if (diff === 1) return 'Bogey'
   if (diff === 2) return 'Double'
   return 'Triple+'
+}
+
+/** Index of the first hole some player has no score on; the last hole when all are scored. */
+export function firstIncompleteHole(round: Round, layout: Layout): number {
+  const ids = round.playerIds ?? []
+  const index = layout.pars.findIndex((_, hole) =>
+    ids.some((id) => typeof round.scores?.[id]?.[hole] !== 'number'))
+  return index === -1 ? layout.pars.length - 1 : index
 }
