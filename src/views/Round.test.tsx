@@ -33,10 +33,14 @@ describe('Scorekeeper round', () => {
     renderAt(storage, '/round/new')
 
     await waitFor(() => expect(screen.getByRole('button', { name: 'Kivilahti' })).toBeTruthy())
+    const startButton = () => screen.getByRole('button', { name: /^Start round/ }) as HTMLButtonElement
+    expect(startButton().disabled).toBe(true)
     fireEvent.click(screen.getByRole('button', { name: 'Kivilahti' }))
     fireEvent.click(screen.getByRole('button', { name: /^Short 3/ }))
-    fireEvent.click(screen.getByRole('checkbox'))
-    fireEvent.click(screen.getByRole('button', { name: 'Start round' }))
+    expect(startButton().disabled).toBe(true)
+    fireEvent.click(screen.getByRole('button', { name: 'Kari' }))
+    expect(startButton().disabled).toBe(false)
+    fireEvent.click(screen.getByRole('button', { name: /^Start round/ }))
 
     await waitFor(() => expect(screen.getByRole('heading', { name: 'Kivilahti' })).toBeTruthy())
 
