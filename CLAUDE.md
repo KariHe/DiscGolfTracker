@@ -19,4 +19,4 @@ The five canonical triage roles, mapped to label strings. See `docs/agents/triag
 
 ### Domain docs
 
-Single-context: one `GLOSSARY.md` at the repo root plus `docs/adr/`. See `docs/agents/domain.md`.
+Single-context: one `GLOSSARY-MAP.md` at the repo root plus `docs/adr/`. See `docs/agents/domain.md`.
