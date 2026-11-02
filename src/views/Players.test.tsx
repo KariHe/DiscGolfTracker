@@ -21,16 +21,16 @@ describe('Players', () => {
     renderPlayers(storage)
 
     fireEvent.change(screen.getByLabelText('Player name'), { target: { value: 'Nadja' } })
-    fireEvent.click(screen.getByRole('button', { name: 'Add' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Add player' }))
     await waitFor(() => expect(screen.getByText('Nadja')).toBeTruthy())
 
-    fireEvent.click(screen.getByRole('button', { name: 'Edit' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Edit Nadja' }))
     fireEvent.change(screen.getByLabelText('Edit player name'), { target: { value: 'Nadja P.' } })
     fireEvent.click(screen.getByRole('button', { name: 'Save' }))
     await waitFor(() => expect(screen.getByText('Nadja P.')).toBeTruthy())
 
     // unreferenced: hard delete
-    fireEvent.click(screen.getByRole('button', { name: 'Delete' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Delete Nadja P.' }))
     await waitFor(() => expect(screen.queryByText('Nadja P.')).toBeNull())
     expect(await storage.list('players')).toHaveLength(0)
   })
@@ -42,8 +42,10 @@ describe('Players', () => {
     renderPlayers(storage)
 
     await waitFor(() => expect(screen.getByText('Kari')).toBeTruthy())
-    fireEvent.click(screen.getByRole('button', { name: 'Delete' }))
-    await waitFor(() => expect(screen.getByText('Kari')).toBeTruthy())
+    expect(screen.getByText('1 round')).toBeTruthy()
+    fireEvent.click(screen.getByRole('button', { name: 'Delete Kari' }))
+    await waitFor(() => expect(screen.getByText('Archived')).toBeTruthy())
+    expect(screen.getByText('Kari')).toBeTruthy()
     const players = await storage.list('players')
     expect(players[0].archived).toBe(true)
   })
