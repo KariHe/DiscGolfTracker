@@ -20,12 +20,13 @@ describe('Courses', () => {
     const storage = createMemoryStorage()
     renderCourses(storage)
 
+    fireEvent.click(screen.getByRole('button', { name: 'Add' }))
     fireEvent.change(screen.getByLabelText('Course name'), { target: { value: 'Kivilahti' } })
     fireEvent.change(screen.getByLabelText('Course location'), {
       target: { value: 'Helsinki' },
     })
-    fireEvent.click(screen.getByRole('button', { name: 'Add' }))
-    await waitFor(() => expect(screen.getByRole('link', { name: 'Kivilahti' })).toBeTruthy())
+    fireEvent.click(screen.getByRole('button', { name: 'Add course' }))
+    await waitFor(() => expect(screen.getByRole('link', { name: /^Kivilahti\s*Helsinki · 0 layouts/ })).toBeTruthy())
     const courses = await storage.list('courses')
     expect(courses[0]).toMatchObject({ name: 'Kivilahti', location: 'Helsinki' })
   })
@@ -42,17 +43,24 @@ describe('Courses', () => {
     expect((await storage.get('courses', course.id))?.name).toBe('Kivilahti DGP')
   })
 
-  it('deletes an unreferenced course and archives one with layouts', async () => {
+  it('archives a course that has layouts from its detail view', async () => {
     const storage = createMemoryStorage()
     const course = await storage.save('courses', { name: 'Kivilahti' })
     await storage.save('layouts', { courseId: course.id, name: 'Short 9', pars: [] })
+    renderCourses(storage, `/courses/${course.id}`)
+
+    await screen.findByRole('heading', { name: 'Layouts' })
+    // first Delete is the course's own; later ones belong to layouts
+    fireEvent.click(screen.getAllByRole('button', { name: 'Delete' })[0])
+    await waitFor(async () => expect((await storage.get('courses', course.id))?.archived).toBe(true))
+  })
+
+  it('lists archived courses in their own section', async () => {
+    const storage = createMemoryStorage()
+    await storage.save('courses', { name: 'Kivilahti', archived: true })
     renderCourses(storage)
 
-    await waitFor(() =>
-      expect(screen.getByRole('link', { name: 'Kivilahti' })).toBeTruthy(),
-    )
-    fireEvent.click(screen.getByRole('button', { name: 'Delete' }))
-    await waitFor(() => expect(screen.getByText('(archived)')).toBeTruthy())
-    expect((await storage.get('courses', course.id))?.archived).toBe(true)
+    expect(await screen.findByRole('heading', { name: 'Archived' })).toBeTruthy()
+    expect(screen.getByRole('link', { name: /^Kivilahti/ })).toBeTruthy()
   })
 })
