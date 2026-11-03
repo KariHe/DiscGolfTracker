@@ -10,14 +10,16 @@ import OutlinedInput from '@mui/material/OutlinedInput'
 import Typography from '@mui/material/Typography'
 import { useStorage } from '../storage/useStorage.ts'
 import type { Course, Layout } from '../domain/types.ts'
+import { useI18n } from '../i18n/useI18n.ts'
 import { Icon } from '../components/Icon.tsx'
 import { icon } from '../components/icons.tsx'
 
 function CourseCard({ course, layoutCount }: { course: Course; layoutCount: number }) {
+  const { t } = useI18n()
   const archived = Boolean(course.archived)
   const details = archived
     ? course.location
-    : [course.location, `${layoutCount} ${layoutCount === 1 ? 'layout' : 'layouts'}`].filter(Boolean).join(' · ')
+    : [course.location, t.courses.layouts(layoutCount)].filter(Boolean).join(' · ')
   return (
     <Card sx={archived ? { bgcolor: 'transparent', border: 2, borderStyle: 'dashed', borderColor: 'surface.handle' } : undefined}>
       <ButtonBase
@@ -49,6 +51,7 @@ function CourseCard({ course, layoutCount }: { course: Course; layoutCount: numb
 
 export default function Courses() {
   const storage = useStorage()
+  const { t } = useI18n()
   const [courses, setCourses] = useState<Course[]>([])
   const [layouts, setLayouts] = useState<Layout[]>([])
   const [adding, setAdding] = useState(false)
@@ -88,24 +91,24 @@ export default function Courses() {
       <Box sx={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', mb: 1 }}>
         <div>
           <Typography variant="overline" color="text.secondary">
-            {active.length} {active.length === 1 ? 'course' : 'courses'}
+            {t.courses.count(active.length)}
           </Typography>
-          <Typography variant="h1" sx={{ fontSize: 34, mt: 0.5 }}>Courses</Typography>
+          <Typography variant="h1" sx={{ fontSize: 34, mt: 0.5 }}>{t.tabs.courses}</Typography>
         </div>
         <Button size="small" onClick={() => setAdding(true)} startIcon={<Icon size={20}>{icon.plus}</Icon>}
           sx={{ gap: 0.75, pl: 1.5 }}>
-          Add
+          {t.common.add}
         </Button>
       </Box>
 
       {active.length === 0 && (
-        <Typography variant="body2" color="text.secondary">No courses yet — add your first one</Typography>
+        <Typography variant="body2" color="text.secondary">{t.courses.empty}</Typography>
       )}
       {active.map((course) => <CourseCard key={course.id} course={course} layoutCount={layoutCount(course)} />)}
 
       {archived.length > 0 && (
         <>
-          <Typography variant="overline" component="h2" color="text.secondary" sx={{ mt: 1.5 }}>Archived</Typography>
+          <Typography variant="overline" component="h2" color="text.secondary" sx={{ mt: 1.5 }}>{t.common.archived}</Typography>
           {archived.map((course) => <CourseCard key={course.id} course={course} layoutCount={layoutCount(course)} />)}
         </>
       )}
@@ -114,18 +117,18 @@ export default function Courses() {
         anchor="bottom"
         open={adding}
         onClose={() => setAdding(false)}
-        slotProps={{ paper: { 'aria-label': 'Add course' } }}
+        slotProps={{ paper: { 'aria-label': t.courses.addCourse } }}
       >
         <Box component="form" onSubmit={addCourse} sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
           <Box aria-hidden="true" sx={{ width: 40, height: 4, borderRadius: '2px', bgcolor: 'surface.handle', mx: 'auto' }} />
-          <Typography variant="h4" sx={{ textAlign: 'center' }}>New course</Typography>
-          <OutlinedInput autoFocus placeholder="Course name" value={name}
-            onChange={(e) => setName(e.target.value)} inputProps={{ 'aria-label': 'Course name' }} sx={{ height: 56 }} />
-          <OutlinedInput placeholder="Location (optional)" value={location}
-            onChange={(e) => setLocation(e.target.value)} inputProps={{ 'aria-label': 'Course location' }} sx={{ height: 56 }} />
+          <Typography variant="h4" sx={{ textAlign: 'center' }}>{t.courses.newCourse}</Typography>
+          <OutlinedInput autoFocus placeholder={t.courses.courseName} value={name}
+            onChange={(e) => setName(e.target.value)} inputProps={{ 'aria-label': t.courses.courseName }} sx={{ height: 56 }} />
+          <OutlinedInput placeholder={t.courses.locationOptional} value={location}
+            onChange={(e) => setLocation(e.target.value)} inputProps={{ 'aria-label': t.courses.courseLocation }} sx={{ height: 56 }} />
           <Box sx={{ display: 'flex', gap: 1.5 }}>
-            <Button variant="outlined" onClick={() => setAdding(false)} sx={{ flex: 1 }}>Cancel</Button>
-            <Button type="submit" disabled={!name.trim()} sx={{ flex: 1.4 }}>Add course</Button>
+            <Button variant="outlined" onClick={() => setAdding(false)} sx={{ flex: 1 }}>{t.common.cancel}</Button>
+            <Button type="submit" disabled={!name.trim()} sx={{ flex: 1.4 }}>{t.courses.addCourse}</Button>
           </Box>
         </Box>
       </Drawer>

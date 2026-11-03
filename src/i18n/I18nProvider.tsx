@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react'
-import { languages, type Language } from './dictionaries.ts'
+import { languages, locales, type Language } from './dictionaries.ts'
 import { I18nContext, type I18n } from './context.ts'
 
 const STORAGE_KEY = 'language'
@@ -28,6 +28,7 @@ export function I18nProvider({ children }: { children: ReactNode }) {
   const value = useMemo<I18n>(() => ({
     language,
     t: languages[language],
+    locale: locales[language],
     setLanguage: (next) => {
       setLanguageState(next)
       try {

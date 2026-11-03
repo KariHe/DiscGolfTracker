@@ -14,6 +14,7 @@ import Typography from '@mui/material/Typography'
 import { useStorage } from '../storage/useStorage.ts'
 import { courseIsReferenced, layoutIsReferenced } from '../domain/records.ts'
 import type { Course, Layout, Round } from '../domain/types.ts'
+import { useI18n } from '../i18n/useI18n.ts'
 import { Icon } from '../components/Icon.tsx'
 import { icon } from '../components/icons.tsx'
 
@@ -49,6 +50,7 @@ function LayoutEditor({ layout, used, onDone, onDelete }: {
   onDelete: () => void
 }) {
   const storage = useStorage()
+  const { t } = useI18n()
   const [name, setName] = useState(layout.name)
   const [pars, setPars] = useState<number[]>(layout.pars)
   const [changed, setChanged] = useState<number | null>(null)
@@ -80,16 +82,16 @@ function LayoutEditor({ layout, used, onDone, onDelete }: {
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, px: 2, pb: 2 }}>
       {!used && (
         <OutlinedInput value={name} onChange={(e) => setName(e.target.value)}
-          inputProps={{ 'aria-label': 'Layout name' }} sx={{ height: 48 }} />
+          inputProps={{ 'aria-label': t.courseDetail.layoutName }} sx={{ height: 48 }} />
       )}
       <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700 }}>
-        Tap a hole to change par · <Box component="span" sx={{ color: 'primary.main' }}>par {parTotal(pars)}</Box>
+        {t.courseDetail.tapToChange} · <Box component="span" sx={{ color: 'primary.main' }}>{t.common.par(parTotal(pars))}</Box>
       </Typography>
       <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(6, minmax(0, 1fr))', gap: 0.75 }}>
         {pars.map((par, index) => (
           <ButtonBase
             key={index}
-            aria-label={`Par hole ${index + 1}: ${par}`}
+            aria-label={t.courseDetail.parHole(index + 1, par)}
             onClick={() => bump(index)}
             sx={{
               height: 52, flexDirection: 'column', gap: '1px', borderRadius: '14px', border: 2,
@@ -107,13 +109,13 @@ function LayoutEditor({ layout, used, onDone, onDelete }: {
             <Icon size={16}><circle cx="12" cy="12" r="9" /><path d="M12 8v5M12 16.5v.5" /></Icon>
           </Box>
           <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>
-            This layout has rounds. Saving creates a new {layout.name} and archives this one.
+            {t.courseDetail.usedNotice(layout.name)}
           </Typography>
         </Box>
       )}
       <Box sx={{ display: 'flex', gap: 1.5 }}>
-        <Button size="small" variant="outlined" onClick={onDelete} sx={{ flex: 1 }}>Delete layout</Button>
-        <Button size="small" onClick={save} sx={{ flex: 1.4 }}>Save layout</Button>
+        <Button size="small" variant="outlined" onClick={onDelete} sx={{ flex: 1 }}>{t.courseDetail.deleteLayout}</Button>
+        <Button size="small" onClick={save} sx={{ flex: 1.4 }}>{t.courseDetail.saveLayout}</Button>
       </Box>
     </Box>
   )
@@ -121,6 +123,7 @@ function LayoutEditor({ layout, used, onDone, onDelete }: {
 
 export default function CourseDetail() {
   const { courseId } = useParams()
+  const { t } = useI18n()
   const storage = useStorage()
   const navigate = useNavigate()
   const [course, setCourse] = useState<Course | null>(null)
@@ -208,16 +211,16 @@ export default function CourseDetail() {
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, pb: 3 }}>
       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', pt: 0.5, pb: 1 }}>
-        <IconButton component={Link} to="/courses" aria-label="Back to courses">
+        <IconButton component={Link} to="/courses" aria-label={t.courseDetail.backToCourses}>
           <Icon>{icon.back}</Icon>
         </IconButton>
-        <IconButton aria-label="Course menu" onClick={(e) => setMenuAnchor(e.currentTarget)}>
+        <IconButton aria-label={t.courseDetail.courseMenu} onClick={(e) => setMenuAnchor(e.currentTarget)}>
           <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
             <circle cx="5" cy="12" r="1.8" /><circle cx="12" cy="12" r="1.8" /><circle cx="19" cy="12" r="1.8" />
           </svg>
         </IconButton>
         <Menu anchorEl={menuAnchor} open={Boolean(menuAnchor)} onClose={() => setMenuAnchor(null)}>
-          <MenuItem onClick={remove}>Delete course</MenuItem>
+          <MenuItem onClick={remove}>{t.courseDetail.deleteCourse}</MenuItem>
         </Menu>
       </Box>
 
@@ -225,25 +228,25 @@ export default function CourseDetail() {
         <Box sx={{ minWidth: 0 }}>
           <Typography variant="h1" sx={{ fontSize: 30, lineHeight: 1.1 }}>{course.name}</Typography>
           <Typography variant="body1" color="text.secondary" sx={{ mt: 0.5, fontWeight: 600 }}>
-            {[course.location, course.archived && 'Archived'].filter(Boolean).join(' · ')}
+            {[course.location, course.archived && t.common.archived].filter(Boolean).join(' · ')}
           </Typography>
         </Box>
         <Button size="small" variant="outlined" onClick={() => setSheet('course')}
           startIcon={<Icon size={16}>{icon.edit}</Icon>} sx={{ gap: 0.75, flex: 'none' }}>
-          Edit
+          {t.courseDetail.edit}
         </Button>
       </Box>
 
       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mt: 1.5 }}>
-        <Typography variant="h4" component="h2">Layouts</Typography>
+        <Typography variant="h4" component="h2">{t.courseDetail.layoutsHeading}</Typography>
         <Button size="small" onClick={() => setSheet('layout')} startIcon={<Icon size={18}>{icon.plus}</Icon>}
           sx={{ gap: 0.75, pl: 1.25, bgcolor: 'surface.elevated', color: 'primary.main', '&:hover': { bgcolor: 'surface.track' } }}>
-          Add layout
+          {t.courseDetail.addLayout}
         </Button>
       </Box>
 
       {active.length === 0 && (
-        <Typography variant="body2" color="text.secondary">No layouts yet</Typography>
+        <Typography variant="body2" color="text.secondary">{t.courseDetail.noLayouts}</Typography>
       )}
       {active.map((layout) => {
         const open = editingLayoutId === layout.id
@@ -257,7 +260,7 @@ export default function CourseDetail() {
               <Box sx={{ flex: 1, minWidth: 0 }}>
                 <Typography variant="h5" component="span" noWrap sx={{ display: 'block' }}>{layout.name}</Typography>
                 <Typography variant="subtitle2" color="text.secondary">
-                  {layout.pars.length} holes · par {parTotal(layout.pars)}
+                  {t.courseDetail.holesPar(layout.pars.length, parTotal(layout.pars))}
                 </Typography>
               </Box>
               <Box sx={{ color: 'text.secondary', display: 'flex', transform: open ? 'rotate(-90deg)' : 'rotate(90deg)' }}>
@@ -280,36 +283,36 @@ export default function CourseDetail() {
       {archived.map((layout) => (
         <Box key={layout.id} sx={{ display: 'flex', alignItems: 'center', gap: 1.5, p: '12px 16px', borderRadius: 6, border: 2, borderStyle: 'dashed', borderColor: 'surface.handle' }}>
           <Typography variant="subtitle1" color="text.secondary" sx={{ flex: 1, fontWeight: 700 }}>
-            {layout.name} <Box component="span" sx={{ fontWeight: 600 }}>· par {parTotal(layout.pars)}</Box>
+            {layout.name} <Box component="span" sx={{ fontWeight: 600 }}>· {t.common.par(parTotal(layout.pars))}</Box>
           </Typography>
           <Typography variant="caption" color="text.secondary" sx={{ px: 1.25, py: 0.5, borderRadius: 999, bgcolor: 'surface.elevated', fontWeight: 700 }}>
-            Archived
+            {t.common.archived}
           </Typography>
         </Box>
       ))}
 
-      <Sheet open={sheet === 'course'} label="Edit course" onClose={() => setSheet(null)} onSubmit={save}>
-        <OutlinedInput value={name} placeholder="Course name" onChange={(e) => setName(e.target.value)}
-          inputProps={{ 'aria-label': 'Course name' }} sx={{ height: 56 }} />
-        <OutlinedInput value={location} placeholder="Location (optional)" onChange={(e) => setLocation(e.target.value)}
-          inputProps={{ 'aria-label': 'Course location' }} sx={{ height: 56 }} />
+      <Sheet open={sheet === 'course'} label={t.courseDetail.editCourse} onClose={() => setSheet(null)} onSubmit={save}>
+        <OutlinedInput value={name} placeholder={t.courses.courseName} onChange={(e) => setName(e.target.value)}
+          inputProps={{ 'aria-label': t.courses.courseName }} sx={{ height: 56 }} />
+        <OutlinedInput value={location} placeholder={t.courses.locationOptional} onChange={(e) => setLocation(e.target.value)}
+          inputProps={{ 'aria-label': t.courses.courseLocation }} sx={{ height: 56 }} />
         <Box sx={{ display: 'flex', gap: 1.5 }}>
-          <Button variant="outlined" onClick={() => setSheet(null)} sx={{ flex: 1 }}>Cancel</Button>
-          <Button type="submit" disabled={!name.trim()} sx={{ flex: 1.4 }}>Save</Button>
+          <Button variant="outlined" onClick={() => setSheet(null)} sx={{ flex: 1 }}>{t.common.cancel}</Button>
+          <Button type="submit" disabled={!name.trim()} sx={{ flex: 1.4 }}>{t.common.save}</Button>
         </Box>
       </Sheet>
 
-      <Sheet open={sheet === 'layout'} label="New layout" onClose={() => setSheet(null)} onSubmit={addLayout}>
-        <OutlinedInput autoFocus value={newLayoutName} placeholder="Layout name" onChange={(e) => setNewLayoutName(e.target.value)}
-          inputProps={{ 'aria-label': 'Layout name' }} sx={{ height: 56 }} />
+      <Sheet open={sheet === 'layout'} label={t.courseDetail.newLayout} onClose={() => setSheet(null)} onSubmit={addLayout}>
+        <OutlinedInput autoFocus value={newLayoutName} placeholder={t.courseDetail.layoutName} onChange={(e) => setNewLayoutName(e.target.value)}
+          inputProps={{ 'aria-label': t.courseDetail.layoutName }} sx={{ height: 56 }} />
         <Box component="label" sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-          <Typography variant="subtitle1" sx={{ flex: 1 }}>Holes</Typography>
+          <Typography variant="subtitle1" sx={{ flex: 1 }}>{t.courseDetail.holes}</Typography>
           <OutlinedInput type="number" value={newLayoutHoles} onChange={(e) => setNewLayoutHoles(Math.max(1, Number(e.target.value)))}
-            inputProps={{ min: 1, 'aria-label': 'Hole count' }} sx={{ height: 56, width: 110 }} />
+            inputProps={{ min: 1, 'aria-label': t.courseDetail.holeCount }} sx={{ height: 56, width: 110 }} />
         </Box>
         <Box sx={{ display: 'flex', gap: 1.5 }}>
-          <Button variant="outlined" onClick={() => setSheet(null)} sx={{ flex: 1 }}>Cancel</Button>
-          <Button type="submit" disabled={!newLayoutName.trim()} sx={{ flex: 1.4 }}>Add layout</Button>
+          <Button variant="outlined" onClick={() => setSheet(null)} sx={{ flex: 1 }}>{t.common.cancel}</Button>
+          <Button type="submit" disabled={!newLayoutName.trim()} sx={{ flex: 1.4 }}>{t.courseDetail.addLayout}</Button>
         </Box>
       </Sheet>
     </Box>

@@ -38,16 +38,18 @@ export function formatVsPar(vsPar: number | null | undefined): string {
   return vsPar > 0 ? `+${vsPar}` : String(vsPar)
 }
 
-/** Name for a hole score, e.g. "Birdie" for 2 on a par 3. */
-export function scoreName(strokes: number, par: number): string {
-  if (strokes === 1) return 'Ace'
+export type ScoreName = 'ace' | 'eagle' | 'birdie' | 'par' | 'bogey' | 'double' | 'tripleOrWorse'
+
+/** Name key for a hole score, e.g. "birdie" for 2 on a par 3. */
+export function scoreName(strokes: number, par: number): ScoreName {
+  if (strokes === 1) return 'ace'
   const diff = strokes - par
-  if (diff <= -2) return 'Eagle'
-  if (diff === -1) return 'Birdie'
-  if (diff === 0) return 'Par'
-  if (diff === 1) return 'Bogey'
-  if (diff === 2) return 'Double'
-  return 'Triple+'
+  if (diff <= -2) return 'eagle'
+  if (diff === -1) return 'birdie'
+  if (diff === 0) return 'par'
+  if (diff === 1) return 'bogey'
+  if (diff === 2) return 'double'
+  return 'tripleOrWorse'
 }
 
 /** Index of the first hole some player has no score on; the last hole when all are scored. */

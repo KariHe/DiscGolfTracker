@@ -18,6 +18,7 @@ import { useStorage } from '../storage/useStorage.ts'
 import { firstIncompleteHole, playerTotals, formatVsPar, scoreName, vsParLabel } from '../domain/scores.ts'
 import type { Course, Layout, Player, Round } from '../domain/types.ts'
 import { playerTint, scoreColor } from '../theme'
+import { useI18n } from '../i18n/useI18n.ts'
 import { Icon } from '../components/Icon.tsx'
 import { icon } from '../components/icons.tsx'
 
@@ -28,6 +29,7 @@ export default function Round() {
   const storage = useStorage()
   const navigate = useNavigate()
   const theme = useTheme()
+  const { t } = useI18n()
   const [round, setRound] = useState<Round | null>(null)
   const roundRef = useRef<Round | null>(null)
   const [layout, setLayout] = useState<Layout | null>(null)
@@ -96,7 +98,7 @@ export default function Round() {
     setMenuAnchor(null)
     const current = roundRef.current
     if (!current) return
-    if (!window.confirm('Delete active round?')) return
+    if (!window.confirm(t.round.deleteConfirm)) return
     await storage.delete('rounds', current.id)
     navigate('/')
   }
@@ -104,8 +106,8 @@ export default function Round() {
   if (!round || !layout || hole === null) {
     return (
       <>
-        <p>No active round</p>
-        <Link to="/round/new">Start a round</Link>
+        <p>{t.round.noActive}</p>
+        <Link to="/round/new">{t.home.startRound}</Link>
       </>
     )
   }
@@ -128,7 +130,7 @@ export default function Round() {
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', pt: 0.5, pb: 1 }}>
-        <IconButton aria-label="Back" onClick={() => navigate('/')}>
+        <IconButton aria-label={t.common.back} onClick={() => navigate('/')}>
           <Icon>{icon.back}</Icon>
         </IconButton>
         <Box sx={{ textAlign: 'center', minWidth: 0 }}>
@@ -136,30 +138,30 @@ export default function Round() {
             {course?.name ?? layout.name}
           </Typography>
           <Typography variant="caption" color="text.secondary">
-            {layout.name} · {players.length} {players.length === 1 ? 'player' : 'players'}
+            {layout.name} · {t.common.players(players.length)}
           </Typography>
         </Box>
-        <IconButton aria-label="Round menu" onClick={(e) => setMenuAnchor(e.currentTarget)}>
+        <IconButton aria-label={t.round.roundMenu} onClick={(e) => setMenuAnchor(e.currentTarget)}>
           <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
             <circle cx="5" cy="12" r="1.8" /><circle cx="12" cy="12" r="1.8" /><circle cx="19" cy="12" r="1.8" />
           </svg>
         </IconButton>
         <Menu anchorEl={menuAnchor} open={Boolean(menuAnchor)} onClose={() => setMenuAnchor(null)}>
-          <MenuItem onClick={() => { setMenuAnchor(null); finish() }}>Finish round</MenuItem>
-          <MenuItem onClick={deleteActive}>Delete active round</MenuItem>
+          <MenuItem onClick={() => { setMenuAnchor(null); finish() }}>{t.round.finishRound}</MenuItem>
+          <MenuItem onClick={deleteActive}>{t.round.deleteActive}</MenuItem>
         </Menu>
       </Box>
 
       <Card sx={{ mt: 1.5, p: 2.5, borderRadius: `${theme.radius.lg}px` }}>
         <Typography variant="overline" color="primary">
-          Hole {hole + 1} of {layout.pars.length}
+          {t.home.holeOf(hole + 1, layout.pars.length)}
         </Typography>
-        <Typography variant="h1" component="p" sx={{ mt: 0.5 }}>Par {par}</Typography>
+        <Typography variant="h1" component="p" sx={{ mt: 0.5 }}>{t.round.par(par)}</Typography>
         <Box sx={{ display: 'flex', gap: 0.5, mt: 1.5 }}>
           {layout.pars.map((_, index) => (
             <ButtonBase
               key={index}
-              aria-label={`Go to hole ${index + 1}`}
+              aria-label={t.round.goToHole(index + 1)}
               aria-current={index === hole ? 'step' : undefined}
               onClick={() => setHole(index)}
               sx={{ flex: 1, height: 24, alignItems: 'flex-end', borderRadius: '3px' }}
@@ -181,7 +183,7 @@ export default function Round() {
           const before = { scores: { [player.id]: (round.scores?.[player.id] ?? []).slice(0, hole) } }
           const { vsPar } = playerTotals(before, player.id, layout)
           const strokes = strokesOf(player)
-          const label = scoreName(strokes, par)
+          const label = t.scoreNames[scoreName(strokes, par)]
           return (
             <Card key={player.id} sx={{ display: 'flex', alignItems: 'center', gap: 1.5, px: 1.75, minHeight: 88 }}>
               <Avatar sx={{ bgcolor: playerTint(theme, index) }}>{player.name[0]}</Avatar>
@@ -191,11 +193,11 @@ export default function Round() {
                   <Typography variant="numeric" sx={{ color: scoreColor(theme, vsPar ?? 0) }}>
                     {vsParLabel(vsPar)}
                   </Typography>
-                  {' '}thru {hole}
+                  {' '}{t.round.thru(hole)}
                 </Typography>
               </Box>
               <ButtonBase
-                aria-label={`Set throws for ${player.name}, currently ${strokes}, ${label}`}
+                aria-label={t.round.setThrows(player.name, strokes, label)}
                 onClick={() => setPicking(player)}
                 sx={{
                   width: 120, height: 60, pl: 2, pr: 1.5,
@@ -219,14 +221,14 @@ export default function Round() {
 
       <Box sx={{ position: 'sticky', bottom: 0, bgcolor: 'background.default', pt: 1.5, pb: 1.5 }}>
         <Typography variant="caption" color="text.secondary" component="p" sx={{ textAlign: 'center', mb: 1.5 }}>
-          Totals update when you finish the hole
+          {t.round.totalsNote}
         </Typography>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-          <IconButton size="large" aria-label="Open scorecard" onClick={() => setScorecardOpen(true)}>
+          <IconButton size="large" aria-label={t.round.openScorecard} onClick={() => setScorecardOpen(true)}>
             <Icon size={24}>{icon.scorecard}</Icon>
           </IconButton>
           <Button size="large" fullWidth onClick={finishHole} endIcon={<Icon>{icon.arrow}</Icon>}>
-            {isLastHole ? 'Finish round' : `Finish hole ${hole + 1}`}
+            {isLastHole ? t.round.finishRound : t.round.finishHole(hole + 1)}
           </Button>
         </Box>
       </Box>
@@ -235,7 +237,7 @@ export default function Round() {
         anchor="bottom"
         open={picking !== null}
         onClose={() => setPicking(null)}
-        slotProps={{ paper: { 'aria-label': `Choose throws for ${picking?.name ?? ''}` } }}
+        slotProps={{ paper: { 'aria-label': t.round.chooseThrows(picking?.name ?? '') } }}
       >
         {picking && (
           <ThrowPicker
@@ -253,7 +255,7 @@ export default function Round() {
       </Drawer>
 
       <Dialog open={scorecardOpen} onClose={() => setScorecardOpen(false)} fullWidth maxWidth="sm">
-        <DialogTitle>Scorecard</DialogTitle>
+        <DialogTitle>{t.round.scorecard}</DialogTitle>
         <Box sx={{ overflowX: 'auto', px: 3, pb: 3 }}>
           <Box component="table" sx={{ borderCollapse: 'collapse', '& th, & td': { p: 0.5, textAlign: 'center' } }}>
             <thead>
@@ -265,7 +267,7 @@ export default function Round() {
                     <Typography variant="caption" color="text.secondary">({holePar})</Typography>
                   </th>
                 ))}
-                <th><Typography variant="subtitle2">Total</Typography></th>
+                <th><Typography variant="subtitle2">{t.round.total}</Typography></th>
               </tr>
             </thead>
             <tbody>
@@ -279,7 +281,7 @@ export default function Round() {
                         <InputBase
                           type="number"
                           value={round.scores?.[player.id]?.[index] ?? ''}
-                          inputProps={{ min: 0, 'aria-label': `${player.name} strokes hole ${index + 1}` }}
+                          inputProps={{ min: 0, 'aria-label': t.common.strokesAria(player.name, index + 1) }}
                           onChange={(e) => setScore(player.id, index,
                             e.target.value === '' ? undefined : Math.max(0, Number(e.target.value)))}
                           sx={{
@@ -312,6 +314,7 @@ function ThrowPicker({ name, hole, par, initial, onCancel, onCommit }: {
   onCancel: () => void
   onCommit: (value: number) => void
 }) {
+  const { t } = useI18n()
   const wheelRef = useRef<HTMLDivElement>(null)
   const pick = useRef(Math.min(Math.max(initial, 1), WHEEL_MAX))
   const fade = (direction: string) =>
@@ -327,14 +330,14 @@ function ThrowPicker({ name, hole, par, initial, onCancel, onCommit }: {
       <Box sx={{ textAlign: 'center' }}>
         <Typography variant="h4">{name}</Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mt: 0.25 }}>
-          Throws on hole {hole + 1} · scroll to choose
+          {t.round.throwsOnHole(hole + 1)}
         </Typography>
       </Box>
-      <Box sx={(t) => ({ position: 'relative', height: 224, mt: 1.5, '--fade': t.palette.surface.raised })}>
+      <Box sx={(theme) => ({ position: 'relative', height: 224, mt: 1.5, '--fade': theme.palette.surface.raised })}>
         <Box
           ref={wheelRef}
           role="group"
-          aria-label="Throw count wheel"
+          aria-label={t.round.throwWheel}
           tabIndex={0}
           onScroll={(e) => {
             const index = Math.round(e.currentTarget.scrollTop / WHEEL_ITEM)
@@ -350,7 +353,7 @@ function ThrowPicker({ name, hole, par, initial, onCancel, onCommit }: {
             <Box key={value} sx={{ height: WHEEL_ITEM, scrollSnapAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1.5 }}>
               <Typography variant="h2" component="span" sx={{ width: 44, textAlign: 'right' }}>{value}</Typography>
               <Typography variant="subtitle1" component="span" color="text.secondary" sx={{ width: 80 }}>
-                {scoreName(value, par)}
+                {t.scoreNames[scoreName(value, par)]}
               </Typography>
             </Box>
           ))}
@@ -358,14 +361,14 @@ function ThrowPicker({ name, hole, par, initial, onCancel, onCommit }: {
         </Box>
         <Box aria-hidden="true" sx={{ position: 'absolute', inset: '0 0 auto 0', height: 84, pointerEvents: 'none', background: fade('bottom') }} />
         <Box aria-hidden="true" sx={{ position: 'absolute', inset: 'auto 0 0 0', height: 84, pointerEvents: 'none', background: fade('top') }} />
-        <Box aria-hidden="true" sx={(t) => ({
+        <Box aria-hidden="true" sx={(theme) => ({
           position: 'absolute', left: 0, right: 0, top: 84, height: WHEEL_ITEM, pointerEvents: 'none',
-          borderRadius: `${t.radius.sm}px`, border: `2px solid ${t.palette.primary.main}`, bgcolor: 'action.selected',
+          borderRadius: `${theme.radius.sm}px`, border: `2px solid ${theme.palette.primary.main}`, bgcolor: 'action.selected',
         })} />
       </Box>
       <Box sx={{ display: 'flex', gap: 1.5, mt: 2 }}>
-        <Button variant="outlined" onClick={onCancel} sx={{ flex: 1 }}>Cancel</Button>
-        <Button onClick={() => onCommit(pick.current)} sx={{ flex: 1.4 }}>Set score</Button>
+        <Button variant="outlined" onClick={onCancel} sx={{ flex: 1 }}>{t.common.cancel}</Button>
+        <Button onClick={() => onCommit(pick.current)} sx={{ flex: 1.4 }}>{t.round.setScore}</Button>
       </Box>
     </>
   )

@@ -14,6 +14,7 @@ import { alpha, useTheme } from '@mui/material/styles'
 import { useStorage } from '../storage/useStorage.ts'
 import type { Course, Layout, Player } from '../domain/types.ts'
 import { playerTint } from '../theme'
+import { useI18n } from '../i18n/useI18n.ts'
 import { Icon } from '../components/Icon.tsx'
 import { icon } from '../components/icons.tsx'
 
@@ -29,6 +30,7 @@ export default function RoundStart() {
   const storage = useStorage()
   const navigate = useNavigate()
   const theme = useTheme()
+  const { t } = useI18n()
   const [courses, setCourses] = useState<Course[]>([])
   const [layouts, setLayouts] = useState<Layout[]>([])
   const [players, setPlayers] = useState<Player[]>([])
@@ -103,23 +105,23 @@ export default function RoundStart() {
   )
 
   const lime = theme.palette.primary.main
-  const startLabel = picked.length === 1 ? 'Start round · 1 player' : `Start round · ${picked.length} players`
+  const startLabel = t.roundStart.startLabel(picked.length)
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, pt: 0.5, pb: 1 }}>
-        <IconButton component={RouterLink} to="/" aria-label="Back">
+        <IconButton component={RouterLink} to="/" aria-label={t.common.back}>
           <Icon>{icon.back}</Icon>
         </IconButton>
-        <Typography variant="h6" component="h1">Start a round</Typography>
+        <Typography variant="h6" component="h1">{t.roundStart.title}</Typography>
       </Box>
 
       <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 2.5, pt: 1.5 }}>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-          <SectionLabel>Course</SectionLabel>
+          <SectionLabel>{t.roundStart.course}</SectionLabel>
           {courses.length === 0 && (
             <Typography variant="body2" color="text.secondary">
-              No courses yet — <Link component={RouterLink} to="/courses">add one first</Link>
+              {t.roundStart.noCourses} <Link component={RouterLink} to="/courses">{t.roundStart.addOneFirst}</Link>
             </Typography>
           )}
           {courses.length > 0 && (
@@ -134,7 +136,7 @@ export default function RoundStart() {
             >
               <Box sx={{ flex: 1, minWidth: 0 }}>
                 <Typography variant="h6" component="span" noWrap sx={{ display: 'block' }} color={selectedCourse ? 'text.primary' : 'text.secondary'}>
-                  {selectedCourse ? selectedCourse.name : 'Select course'}
+                  {selectedCourse ? selectedCourse.name : t.roundStart.selectCourse}
                 </Typography>
                 {selectedCourse?.location && (
                   <Typography variant="caption" color="text.secondary" sx={{ display: 'block', fontWeight: 600 }}>
@@ -149,9 +151,9 @@ export default function RoundStart() {
 
         {courseId && (
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-            <SectionLabel>Layout</SectionLabel>
+            <SectionLabel>{t.roundStart.layout}</SectionLabel>
             {courseLayouts.length === 0 && (
-              <Typography variant="body2" color="text.secondary">No layouts on this course</Typography>
+              <Typography variant="body2" color="text.secondary">{t.roundStart.noLayoutsOnCourse}</Typography>
             )}
             <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
               {courseLayouts.map((layout) => {
@@ -167,7 +169,7 @@ export default function RoundStart() {
                       color: on ? 'primary.contrastText' : 'text.primary',
                     }}
                   >
-                    {layout.name} · par {layout.pars.reduce((sum, par) => sum + par, 0)}
+                    {layout.name} · {t.common.par(layout.pars.reduce((sum, par) => sum + par, 0))}
                   </ButtonBase>
                 )
               })}
@@ -176,10 +178,10 @@ export default function RoundStart() {
         )}
 
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-          <SectionLabel>Players</SectionLabel>
+          <SectionLabel>{t.tabs.players}</SectionLabel>
           {players.length === 0 && (
             <Typography variant="body2" color="text.secondary">
-              No players yet — <Link component={RouterLink} to="/players">add some first</Link>
+              {t.roundStart.noPlayers} <Link component={RouterLink} to="/players">{t.roundStart.addSomeFirst}</Link>
             </Typography>
           )}
           <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 1 }}>
@@ -218,11 +220,11 @@ export default function RoundStart() {
             <OutlinedInput
               value={newPlayer}
               onChange={(e) => setNewPlayer(e.target.value)}
-              placeholder="Add a player"
-              inputProps={{ 'aria-label': 'New player name' }}
+              placeholder={t.players.addPlaceholder}
+              inputProps={{ 'aria-label': t.roundStart.newPlayerName }}
               sx={{ flex: 1, height: 48 }}
             />
-            <IconButton type="submit" aria-label="Add player" sx={{
+            <IconButton type="submit" aria-label={t.players.addPlayer} sx={{
               width: 48, height: 48, bgcolor: 'primary.main', color: 'primary.contrastText',
               '&:hover': { bgcolor: 'primary.light' },
             }}>
@@ -233,16 +235,16 @@ export default function RoundStart() {
 
         <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 1.5 }}>
           <Box component="label" sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-            <Typography variant="overline" component="span" color="text.secondary">Date</Typography>
+            <Typography variant="overline" component="span" color="text.secondary">{t.common.date}</Typography>
             <OutlinedInput type="date" value={date} onChange={(e) => setDate(e.target.value)} sx={{ height: 52 }} />
           </Box>
           <Box component="label" sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-            <Typography variant="overline" component="span" color="text.secondary">Note</Typography>
+            <Typography variant="overline" component="span" color="text.secondary">{t.common.note}</Typography>
             <OutlinedInput
-              placeholder="Optional"
+              placeholder={t.common.optional}
               value={note}
               onChange={(e) => setNote(e.target.value)}
-              inputProps={{ 'aria-label': 'Round note' }}
+              inputProps={{ 'aria-label': t.common.roundNote }}
               sx={{ height: 52 }}
             />
           </Box>
@@ -261,19 +263,19 @@ export default function RoundStart() {
         </Button>
       </Box>
 
-      <Dialog open={courseOpen} onClose={() => setCourseOpen(false)} fullWidth maxWidth="sm" aria-label="Select course">
+      <Dialog open={courseOpen} onClose={() => setCourseOpen(false)} fullWidth maxWidth="sm" aria-label={t.roundStart.selectCourse}>
         <Box sx={{ p: 2, display: 'flex', flexDirection: 'column', gap: 1.5, height: '70vh' }}>
           <OutlinedInput
             autoFocus
             value={courseQuery}
             onChange={(e) => setCourseQuery(e.target.value)}
-            placeholder="Search courses"
-            inputProps={{ 'aria-label': 'Search courses' }}
+            placeholder={t.roundStart.searchCourses}
+            inputProps={{ 'aria-label': t.roundStart.searchCourses }}
             sx={{ height: 52, flexShrink: 0 }}
           />
           <Box sx={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 1 }}>
             {shownCourses.length === 0 && (
-              <Typography variant="body2" color="text.secondary">No matching courses</Typography>
+              <Typography variant="body2" color="text.secondary">{t.roundStart.noMatching}</Typography>
             )}
             {shownCourses.map((course) => {
               const on = courseId === course.id

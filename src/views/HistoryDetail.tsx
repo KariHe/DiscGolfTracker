@@ -16,23 +16,25 @@ import { useStorage } from '../storage/useStorage.ts'
 import { playerTotals, vsParLabel } from '../domain/scores.ts'
 import type { Course, Layout, Player, Round } from '../domain/types.ts'
 import { playerTint, scoreColor } from '../theme'
+import type { Dictionary } from '../i18n/dictionaries.ts'
+import { useI18n } from '../i18n/useI18n.ts'
 import { Icon } from '../components/Icon.tsx'
 import { icon } from '../components/icons.tsx'
 
 const CHUNK = 9
 const scoreGrid = { display: 'grid', gridTemplateColumns: '36px repeat(9, minmax(0, 1fr)) 34px', gap: '2px', alignItems: 'center', textAlign: 'center' } as const
 
-function formatLongDate(date?: string) {
+function formatLongDate(date: string | undefined, locale: string) {
   if (!date) return ''
   return new Date(`${date}T00:00`)
-    .toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })
+    .toLocaleDateString(locale, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })
     .replace(',', '')
 }
 
-function chunkLabel(chunk: number, chunkCount: number, holeCount: number) {
-  if (chunkCount === 2 && holeCount === 18) return chunk === 0 ? 'Front 9' : 'Back 9'
+function chunkLabel(t: Dictionary['historyDetail'], chunk: number, chunkCount: number, holeCount: number) {
+  if (chunkCount === 2 && holeCount === 18) return chunk === 0 ? t.front9 : t.back9
   const first = chunk * CHUNK + 1
-  return `Holes ${first}–${Math.min(first + CHUNK - 1, holeCount)}`
+  return t.holesRange(first, Math.min(first + CHUNK - 1, holeCount))
 }
 
 function paddedStrokes(strokesOfPlayer: (number | undefined)[], holeIndex: number) {
@@ -44,6 +46,7 @@ export default function HistoryDetail() {
   const { roundId } = useParams()
   const storage = useStorage()
   const navigate = useNavigate()
+  const { t, locale } = useI18n()
   const [round, setRound] = useState<Round | null>(null)
   const roundRef = useRef<Round | null>(null)
   const [course, setCourse] = useState<Course | null>(null)
@@ -81,8 +84,8 @@ export default function HistoryDetail() {
   if (!round) {
     return (
       <>
-        <p>Round not found</p>
-        <Link to="/history">History</Link>
+        <p>{t.historyDetail.notFound}</p>
+        <Link to="/history">{t.tabs.history}</Link>
       </>
     )
   }
@@ -118,7 +121,7 @@ export default function HistoryDetail() {
   async function remove() {
     setMenuAnchor(null)
     if (!round) return
-    if (!window.confirm('Delete round?')) return
+    if (!window.confirm(t.historyDetail.deleteConfirm)) return
     await storage.delete('rounds', round.id)
     navigate('/history')
   }
@@ -143,29 +146,29 @@ export default function HistoryDetail() {
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1, pt: 0.5, pb: 1 }}>
-        <IconButton component={Link} to="/history" aria-label="Back to history">
+        <IconButton component={Link} to="/history" aria-label={t.historyDetail.backToHistory}>
           <Icon>{icon.back}</Icon>
         </IconButton>
         <Box sx={{ textAlign: 'center', minWidth: 0 }}>
           <Typography variant="h6" component="h1" noWrap>{course?.name ?? layout?.name}</Typography>
           <Typography variant="caption" color="text.secondary">
-            {[layout?.name, formatLongDate(round.date)].filter(Boolean).join(' · ')}
+            {[layout?.name, formatLongDate(round.date, locale)].filter(Boolean).join(' · ')}
           </Typography>
         </Box>
-        <IconButton aria-label="Round menu" onClick={(e) => setMenuAnchor(e.currentTarget)}>
+        <IconButton aria-label={t.round.roundMenu} onClick={(e) => setMenuAnchor(e.currentTarget)}>
           <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
             <circle cx="5" cy="12" r="1.8" /><circle cx="12" cy="12" r="1.8" /><circle cx="19" cy="12" r="1.8" />
           </svg>
         </IconButton>
         <Menu anchorEl={menuAnchor} open={Boolean(menuAnchor)} onClose={() => setMenuAnchor(null)}>
-          <MenuItem onClick={remove}>Delete round</MenuItem>
+          <MenuItem onClick={remove}>{t.historyDetail.deleteRound}</MenuItem>
         </Menu>
       </Box>
 
       <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 1.5, pt: 1.5 }}>
         <Card sx={{ p: 2, borderRadius: `${theme.radius.lg}px` }}>
           <Typography variant="overline" color="primary">
-            Final{layout && ` · par ${parTotal}`}
+            {t.historyDetail.final}{layout && ` · ${t.common.par(parTotal)}`}
           </Typography>
           {ranked.map((row, rank) => (
             <Box key={row.playerId} sx={{ display: 'flex', alignItems: 'center', gap: 1.5, height: 44 }}>
@@ -183,7 +186,7 @@ export default function HistoryDetail() {
         {layout && (
           <Card sx={{ p: 1.5, display: 'flex', flexDirection: 'column', gap: 1 }}>
             {chunkCount > 1 && (
-              <Box role="group" aria-label="Scorecard holes" sx={{
+              <Box role="group" aria-label={t.historyDetail.scorecardHoles} sx={{
                 display: 'grid', gridTemplateColumns: `repeat(${chunkCount}, minmax(0, 1fr))`, gap: 0.5,
                 p: 0.5, borderRadius: 999, bgcolor: 'background.default',
               }}>
@@ -195,19 +198,19 @@ export default function HistoryDetail() {
                       bgcolor: on ? 'surface.elevated' : 'transparent',
                       color: on ? 'text.primary' : 'text.secondary',
                     }}>
-                      {chunkLabel(index, chunkCount, pars.length)}
+                      {chunkLabel(t.historyDetail, index, chunkCount, pars.length)}
                     </ButtonBase>
                   )
                 })}
               </Box>
             )}
             <Box sx={{ ...scoreGrid, height: 26, fontSize: 11, fontWeight: 700, color: 'text.secondary' }}>
-              <Box component="span" sx={{ textAlign: 'left', pl: 0.5 }}>Hole</Box>
+              <Box component="span" sx={{ textAlign: 'left', pl: 0.5 }}>{t.historyDetail.hole}</Box>
               {holes.map((hole) => <span key={hole.index}>{hole.index + 1}</span>)}
-              <span>Tot</span>
+              <span>{t.historyDetail.tot}</span>
             </Box>
             <Box sx={{ ...scoreGrid, height: 26, fontSize: 12, fontWeight: 700, color: 'text.secondary', borderBottom: 1, borderColor: 'divider' }}>
-              <Box component="span" sx={{ textAlign: 'left', pl: 0.5 }}>Par</Box>
+              <Box component="span" sx={{ textAlign: 'left', pl: 0.5 }}>{t.historyDetail.par}</Box>
               {holes.map((hole) => <span key={hole.index}>{hole.par}</span>)}
               <span>{sumOf(holes.map((hole) => hole.par))}</span>
             </Box>
@@ -224,7 +227,7 @@ export default function HistoryDetail() {
                           key={hole.index}
                           type="number"
                           value={value ?? ''}
-                          inputProps={{ min: 0, 'aria-label': `${row.name} strokes hole ${hole.index + 1}` }}
+                          inputProps={{ min: 0, 'aria-label': t.common.strokesAria(row.name, hole.index + 1) }}
                           onChange={(e) => setScore(row.playerId, hole.index, e.target.value)}
                           sx={{
                             height: 30, borderRadius: '9px', bgcolor: 'surface.elevated', fontSize: 14, fontWeight: 800,
@@ -258,19 +261,19 @@ export default function HistoryDetail() {
         {editing ? (
           <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 1.5 }}>
             <Box component="label" sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-              <Typography variant="overline" component="span" color="text.secondary">Date</Typography>
+              <Typography variant="overline" component="span" color="text.secondary">{t.common.date}</Typography>
               <OutlinedInput type="date" value={date} onChange={(e) => setDate(e.target.value)}
-                inputProps={{ 'aria-label': 'Round date' }} sx={{ height: 52 }} />
+                inputProps={{ 'aria-label': t.historyDetail.roundDate }} sx={{ height: 52 }} />
             </Box>
             <Box component="label" sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-              <Typography variant="overline" component="span" color="text.secondary">Note</Typography>
-              <OutlinedInput placeholder="Optional" value={note} onChange={(e) => setNote(e.target.value)}
-                inputProps={{ 'aria-label': 'Round note' }} sx={{ height: 52 }} />
+              <Typography variant="overline" component="span" color="text.secondary">{t.common.note}</Typography>
+              <OutlinedInput placeholder={t.common.optional} value={note} onChange={(e) => setNote(e.target.value)}
+                inputProps={{ 'aria-label': t.common.roundNote }} sx={{ height: 52 }} />
             </Box>
           </Box>
         ) : round.note && (
           <Card sx={{ p: '14px 16px' }}>
-            <Typography variant="overline" color="text.secondary">Note</Typography>
+            <Typography variant="overline" color="text.secondary">{t.common.note}</Typography>
             <Typography sx={{ mt: 0.5 }}>{round.note}</Typography>
           </Card>
         )}
@@ -278,11 +281,11 @@ export default function HistoryDetail() {
 
       <Box sx={{ position: 'sticky', bottom: 0, bgcolor: 'background.default', pt: 1.5, pb: 1.5 }}>
         {editing ? (
-          <Button size="large" fullWidth onClick={saveDetails}>Save details</Button>
+          <Button size="large" fullWidth onClick={saveDetails}>{t.historyDetail.saveDetails}</Button>
         ) : (
           <Button size="large" variant="outlined" fullWidth onClick={() => setEditing(true)}
             startIcon={<Icon size={18}>{icon.edit}</Icon>}>
-            Edit round
+            {t.historyDetail.editRound}
           </Button>
         )}
       </Box>

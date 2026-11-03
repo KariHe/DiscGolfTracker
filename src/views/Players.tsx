@@ -12,6 +12,7 @@ import { useStorage } from '../storage/useStorage.ts'
 import { playerIsReferenced } from '../domain/records.ts'
 import type { Player, Round } from '../domain/types.ts'
 import { playerTint } from '../theme'
+import { useI18n } from '../i18n/useI18n.ts'
 import { Icon } from '../components/Icon.tsx'
 import { icon } from '../components/icons.tsx'
 
@@ -20,6 +21,7 @@ const smallIconButton = { bgcolor: 'surface.elevated', '&:hover': { bgcolor: 'su
 export default function Players() {
   const storage = useStorage()
   const theme = useTheme()
+  const { t } = useI18n()
   const [players, setPlayers] = useState<Player[]>([])
   const [rounds, setRounds] = useState<Round[]>([])
   const [name, setName] = useState('')
@@ -76,20 +78,20 @@ export default function Players() {
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, pt: 1.5, pb: 2 }}>
       <Box sx={{ mb: 1 }}>
         <Typography variant="overline" color="text.secondary">
-          {active.length} {active.length === 1 ? 'player' : 'players'}
+          {t.players.count(active.length)}
         </Typography>
-        <Typography variant="h1" sx={{ fontSize: 34, mt: 0.5 }}>Players</Typography>
+        <Typography variant="h1" sx={{ fontSize: 34, mt: 0.5 }}>{t.tabs.players}</Typography>
       </Box>
 
       <Box component="form" onSubmit={addPlayer} sx={{ display: 'flex', gap: 1 }}>
         <OutlinedInput
           value={name}
           onChange={(e) => setName(e.target.value)}
-          placeholder="Add a player"
-          inputProps={{ 'aria-label': 'Player name' }}
+          placeholder={t.players.addPlaceholder}
+          inputProps={{ 'aria-label': t.players.playerName }}
           sx={{ flex: 1, height: 56 }}
         />
-        <IconButton type="submit" aria-label="Add player" sx={{
+        <IconButton type="submit" aria-label={t.players.addPlayer} sx={{
           width: 56, height: 56, bgcolor: 'primary.main', color: 'primary.contrastText',
           '&:hover': { bgcolor: 'primary.light' },
         }}>
@@ -106,23 +108,23 @@ export default function Players() {
                 autoFocus
                 value={editName}
                 onChange={(e) => setEditName(e.target.value)}
-                inputProps={{ 'aria-label': 'Edit player name' }}
+                inputProps={{ 'aria-label': t.players.editName }}
                 sx={{ flex: 1, minWidth: 0, height: 48, '& .MuiOutlinedInput-notchedOutline': { borderColor: 'primary.main' } }}
               />
-              <Button type="submit" size="small" sx={{ height: 48 }}>Save</Button>
+              <Button type="submit" size="small" sx={{ height: 48 }}>{t.common.save}</Button>
             </Box>
           ) : (
             <>
               <Box sx={{ flex: 1, minWidth: 0 }}>
                 <Typography variant="h5" noWrap>{player.name}</Typography>
                 <Typography variant="subtitle2" color="text.secondary">
-                  {roundCount(player)} {roundCount(player) === 1 ? 'round' : 'rounds'}
+                  {t.players.rounds(roundCount(player))}
                 </Typography>
               </Box>
-              <IconButton aria-label={`Edit ${player.name}`} onClick={() => startEdit(player)} sx={smallIconButton}>
+              <IconButton aria-label={t.players.edit(player.name)} onClick={() => startEdit(player)} sx={smallIconButton}>
                 <Icon size={18}>{icon.edit}</Icon>
               </IconButton>
-              <IconButton aria-label={`Delete ${player.name}`} onClick={() => remove(player)}
+              <IconButton aria-label={t.players.remove(player.name)} onClick={() => remove(player)}
                 sx={{ ...smallIconButton, color: 'warning.main' }}>
                 <Icon size={18}>{icon.trash}</Icon>
               </IconButton>
@@ -141,7 +143,7 @@ export default function Players() {
           </Avatar>
           <Typography variant="subtitle1" color="text.secondary" noWrap sx={{ flex: 1, fontWeight: 700 }}>{player.name}</Typography>
           <Typography variant="caption" color="text.secondary" sx={{ px: 1.25, py: 0.5, borderRadius: 999, bgcolor: 'surface.elevated', fontWeight: 700 }}>
-            Archived
+            {t.common.archived}
           </Typography>
         </Box>
       ))}

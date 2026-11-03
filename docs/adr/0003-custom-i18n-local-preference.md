@@ -9,6 +9,6 @@ The app supports English and Finnish, with few strings and little pluralisation.
 
 ## Consequences
 
-- Adding a language means adding one dictionary and a display name
+- Adding a language means adding one dictionary, a display name and a locale
 - User-entered names (courses, layouts, players) are never translated
 - Dates use `Intl` with the active language as locale

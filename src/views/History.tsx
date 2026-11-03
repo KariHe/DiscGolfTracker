@@ -10,13 +10,14 @@ import { useStorage } from '../storage/useStorage.ts'
 import { playerTotals, vsParLabel } from '../domain/scores.ts'
 import type { Course, Layout, Player, Round } from '../domain/types.ts'
 import { playerTint, scoreColor } from '../theme'
+import { useI18n } from '../i18n/useI18n.ts'
 
 const visuallyHidden = { position: 'absolute', width: '1px', height: '1px', overflow: 'hidden', clipPath: 'inset(50%)' } as const
 
-function formatDate(date?: string) {
+function formatDate(date: string | undefined, locale: string) {
   if (!date) return ''
   return new Date(`${date}T00:00`)
-    .toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })
+    .toLocaleDateString(locale, { weekday: 'short', day: 'numeric', month: 'short' })
     .replace(',', '')
     .toUpperCase()
 }
@@ -24,6 +25,7 @@ function formatDate(date?: string) {
 export default function History() {
   const storage = useStorage()
   const theme = useTheme()
+  const { t, locale } = useI18n()
   const [rounds, setRounds] = useState<Round[]>([])
   const [layouts, setLayouts] = useState<Layout[]>([])
   const [players, setPlayers] = useState<Player[]>([])
@@ -52,13 +54,13 @@ export default function History() {
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, pt: 1.5, pb: 2 }}>
       <Box sx={{ mb: 1 }}>
         <Typography variant="overline" color="text.secondary">
-          {rounds.length} finished {rounds.length === 1 ? 'round' : 'rounds'}
+          {t.history.count(rounds.length)}
         </Typography>
-        <Typography variant="h1" sx={{ fontSize: 34, mt: 0.5 }}>History</Typography>
+        <Typography variant="h1" sx={{ fontSize: 34, mt: 0.5 }}>{t.tabs.history}</Typography>
       </Box>
 
       {rounds.length === 0 && (
-        <Typography variant="body2" color="text.secondary">No finished rounds yet</Typography>
+        <Typography variant="body2" color="text.secondary">{t.home.noFinished}</Typography>
       )}
 
       {rounds.map((round) => {
@@ -80,11 +82,11 @@ export default function History() {
                 <Box sx={{ minWidth: 0 }}>
                   <Typography variant="h5" component="h2" noWrap>{course?.name ?? layout?.name}</Typography>
                   <Typography variant="subtitle2" color="text.secondary" noWrap>
-                    {layout?.name}{par !== undefined && ` · par ${par}`}
+                    {layout?.name}{par !== undefined && ` · ${t.common.par(par)}`}
                   </Typography>
                 </Box>
                 <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700, letterSpacing: '0.06em', pt: '3px', whiteSpace: 'nowrap' }}>
-                  {formatDate(round.date)}
+                  {formatDate(round.date, locale)}
                 </Typography>
               </Box>
               <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>

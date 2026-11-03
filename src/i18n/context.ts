@@ -4,6 +4,7 @@ import type { Dictionary, Language } from './dictionaries.ts'
 export interface I18n {
   language: Language
   setLanguage: (language: Language) => void
+  locale: string
   t: Dictionary
 }
 

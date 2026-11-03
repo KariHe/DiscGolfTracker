@@ -31,7 +31,7 @@ function dateParts(date: string | undefined, locale: string) {
 export default function Home() {
   const storage = useStorage()
   const theme = useTheme()
-  const { t, language } = useI18n()
+  const { t, locale } = useI18n()
   const [rounds, setRounds] = useState<Round[]>([])
   const [layouts, setLayouts] = useState<Layout[]>([])
   const [players, setPlayers] = useState<Player[]>([])
@@ -100,7 +100,7 @@ export default function Home() {
         const leader = roundPlayers
           .map((player) => ({ player, ...playerTotals(round, player.id, layout) }))
           .sort((a, b) => a.total - b.total)[0]
-        const { month, day } = dateParts(round.date, language)
+        const { month, day } = dateParts(round.date, locale)
         return (
           <Card key={round.id}>
             <ButtonBase
@@ -117,7 +117,7 @@ export default function Home() {
                   {courseOf(layout)?.name ?? layout?.name}
                 </Typography>
                 <Typography variant="subtitle2" color="text.secondary" noWrap>
-                  {layout?.name} · {t.home.players(roundPlayers.length)}
+                  {layout?.name} · {t.common.players(roundPlayers.length)}
                 </Typography>
               </Box>
               {leader && (
@@ -156,7 +156,7 @@ function ActiveRoundCard({ round, layout, courseName, players }: {
         <Typography variant="overline" color="primary">{t.home.roundInProgress}</Typography>
         <Typography sx={{ mt: 0.75, fontSize: 26, fontWeight: 800 }}>{courseName ?? layout?.name}</Typography>
         <Typography variant="subtitle2" color="text.secondary" sx={{ mt: 0.25 }}>
-          {layout?.name} · {t.home.players(players.length)} · {t.home.holeOf(hole + 1, holeCount)}
+          {layout?.name} · {t.common.players(players.length)} · {t.home.holeOf(hole + 1, holeCount)}
         </Typography>
       </div>
       <Box role="img" aria-label={t.home.holesComplete(hole, holeCount)}
