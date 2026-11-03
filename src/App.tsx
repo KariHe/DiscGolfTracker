@@ -10,6 +10,7 @@ import History from './views/History.tsx'
 import HistoryDetail from './views/HistoryDetail.tsx'
 import { TabBar } from './components/TabBar.tsx'
 import { AppThemeProvider } from './theme/AppThemeProvider.tsx'
+import { I18nProvider } from './i18n/I18nProvider.tsx'
 
 function Layout() {
   return (
@@ -38,19 +39,21 @@ function Layout() {
 
 export default function App() {
   return (
-    <AppThemeProvider>
-      <Routes>
-        <Route element={<Layout />}>
-          <Route index element={<Home />} />
-          <Route path="/courses" element={<Courses />} />
-          <Route path="/players" element={<Players />} />
-          <Route path="/history" element={<History />} />
-          <Route path="/round/new" element={<RoundStart />} />
-          <Route path="/round" element={<Round />} />
-          <Route path="/history/:roundId" element={<HistoryDetail />} />
-          <Route path="/courses/:courseId" element={<CourseDetail />} />
-        </Route>
-      </Routes>
-    </AppThemeProvider>
+    <I18nProvider>
+      <AppThemeProvider>
+        <Routes>
+          <Route element={<Layout />}>
+            <Route index element={<Home />} />
+            <Route path="/courses" element={<Courses />} />
+            <Route path="/players" element={<Players />} />
+            <Route path="/history" element={<History />} />
+            <Route path="/round/new" element={<RoundStart />} />
+            <Route path="/round" element={<Round />} />
+            <Route path="/history/:roundId" element={<HistoryDetail />} />
+            <Route path="/courses/:courseId" element={<CourseDetail />} />
+          </Route>
+        </Routes>
+      </AppThemeProvider>
+    </I18nProvider>
   )
 }

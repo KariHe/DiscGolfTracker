@@ -14,14 +14,16 @@ import type { Course, Layout, Player, Round } from '../domain/types.ts'
 import { playerTint, scoreColor } from '../theme'
 import { Icon } from '../components/Icon.tsx'
 import { icon } from '../components/icons.tsx'
+import { LanguageSwitcher } from '../components/LanguageSwitcher.tsx'
+import { useI18n } from '../i18n/useI18n.ts'
 
 const RECENT_COUNT = 2
 
-function dateParts(date?: string) {
+function dateParts(date: string | undefined, locale: string) {
   if (!date) return { month: '', day: '–' }
   const parsed = new Date(`${date}T00:00`)
   return {
-    month: parsed.toLocaleDateString('en', { month: 'short' }).toUpperCase(),
+    month: parsed.toLocaleDateString(locale, { month: 'short' }).toUpperCase(),
     day: String(parsed.getDate()),
   }
 }
@@ -29,6 +31,7 @@ function dateParts(date?: string) {
 export default function Home() {
   const storage = useStorage()
   const theme = useTheme()
+  const { t, language } = useI18n()
   const [rounds, setRounds] = useState<Round[]>([])
   const [layouts, setLayouts] = useState<Layout[]>([])
   const [players, setPlayers] = useState<Player[]>([])
@@ -61,35 +64,35 @@ export default function Home() {
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 1.5, pb: 2 }}>
       <div>
-        <Typography variant="overline" color="text.secondary">Disc Golf Tracker</Typography>
-        <Typography variant="h1" sx={{ fontSize: 34, mt: 0.5 }}>Let’s play</Typography>
+        <Typography variant="overline" color="text.secondary">{t.home.appName}</Typography>
+        <Typography variant="h1" sx={{ fontSize: 34, mt: 0.5 }}>{t.home.title}</Typography>
       </div>
 
       {active ? <ActiveRoundCard round={active} layout={layoutOf(active)}
         courseName={courseOf(layoutOf(active))?.name} players={playersOf(active)} /> : (
         <Card sx={{ p: 2.5, pt: 3, borderRadius: `${theme.radius.lg}px`, display: 'flex', flexDirection: 'column', gap: 2 }}>
           <div>
-            <Typography variant="overline" color="primary">No round in progress</Typography>
-            <Typography sx={{ mt: 0.75, fontSize: 26, fontWeight: 800 }}>Head out to the course</Typography>
+            <Typography variant="overline" color="primary">{t.home.noRound}</Typography>
+            <Typography sx={{ mt: 0.75, fontSize: 26, fontWeight: 800 }}>{t.home.headOut}</Typography>
             <Typography variant="subtitle2" color="text.secondary" sx={{ mt: 0.25 }}>
-              Pick a course, layout and players to start scoring.
+              {t.home.pickToStart}
             </Typography>
           </div>
           <Button size="large" component={RouterLink} to="/round/new" startIcon={<Icon>{icon.plus}</Icon>}>
-            Start a round
+            {t.home.startRound}
           </Button>
         </Card>
       )}
 
       <Box sx={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', mt: 1 }}>
-        <Typography variant="h4" component="h2">Recent rounds</Typography>
+        <Typography variant="h4" component="h2">{t.home.recentRounds}</Typography>
         <Link component={RouterLink} to="/history" underline="none" variant="subtitle2" sx={{ fontWeight: 700, py: 1 }}>
-          See all
+          {t.home.seeAll}
         </Link>
       </Box>
 
       {recent.length === 0 && (
-        <Typography variant="body2" color="text.secondary">No finished rounds yet</Typography>
+        <Typography variant="body2" color="text.secondary">{t.home.noFinished}</Typography>
       )}
       {recent.map((round) => {
         const layout = layoutOf(round)
@@ -97,7 +100,7 @@ export default function Home() {
         const leader = roundPlayers
           .map((player) => ({ player, ...playerTotals(round, player.id, layout) }))
           .sort((a, b) => a.total - b.total)[0]
-        const { month, day } = dateParts(round.date)
+        const { month, day } = dateParts(round.date, language)
         return (
           <Card key={round.id}>
             <ButtonBase
@@ -114,7 +117,7 @@ export default function Home() {
                   {courseOf(layout)?.name ?? layout?.name}
                 </Typography>
                 <Typography variant="subtitle2" color="text.secondary" noWrap>
-                  {layout?.name} · {roundPlayers.length} {roundPlayers.length === 1 ? 'player' : 'players'}
+                  {layout?.name} · {t.home.players(roundPlayers.length)}
                 </Typography>
               </Box>
               {leader && (
@@ -131,6 +134,8 @@ export default function Home() {
           </Card>
         )
       })}
+
+      <Box sx={{ mt: 1 }}><LanguageSwitcher /></Box>
     </Box>
   )
 }
@@ -142,18 +147,19 @@ function ActiveRoundCard({ round, layout, courseName, players }: {
   players: Player[]
 }) {
   const theme = useTheme()
+  const { t } = useI18n()
   const hole = layout ? firstIncompleteHole(round, layout) : 0
   const holeCount = layout?.pars.length ?? 0
   return (
     <Card sx={{ p: 2.5, borderRadius: `${theme.radius.lg}px`, display: 'flex', flexDirection: 'column', gap: 1.75 }}>
       <div>
-        <Typography variant="overline" color="primary">Round in progress</Typography>
+        <Typography variant="overline" color="primary">{t.home.roundInProgress}</Typography>
         <Typography sx={{ mt: 0.75, fontSize: 26, fontWeight: 800 }}>{courseName ?? layout?.name}</Typography>
         <Typography variant="subtitle2" color="text.secondary" sx={{ mt: 0.25 }}>
-          {layout?.name} · {players.length} {players.length === 1 ? 'player' : 'players'} · Hole {hole + 1} of {holeCount}
+          {layout?.name} · {t.home.players(players.length)} · {t.home.holeOf(hole + 1, holeCount)}
         </Typography>
       </div>
-      <Box role="img" aria-label={`${hole} of ${holeCount} holes complete`}
+      <Box role="img" aria-label={t.home.holesComplete(hole, holeCount)}
         sx={{ display: 'flex', gap: 0.5, alignItems: 'flex-end', height: 12 }}>
         {layout?.pars.map((_, index) => (
           <Box key={index} sx={{
@@ -179,7 +185,7 @@ function ActiveRoundCard({ round, layout, courseName, players }: {
         })}
       </Box>
       <Button size="large" component={RouterLink} to="/round" endIcon={<Icon>{icon.arrow}</Icon>}>
-        Resume round
+        {t.home.resumeRound}
       </Button>
     </Card>
   )

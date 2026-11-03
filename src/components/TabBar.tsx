@@ -4,13 +4,14 @@ import ButtonBase from '@mui/material/ButtonBase'
 import { alpha } from '@mui/material/styles'
 import { Icon } from './Icon.tsx'
 import { icon } from './icons.tsx'
+import { useI18n } from '../i18n/useI18n.ts'
 
 const tabs = [
-  { to: '/', label: 'Home', glyph: icon.home },
-  { to: '/courses', label: 'Courses', glyph: icon.courses },
-  { to: '/players', label: 'Players', glyph: icon.players },
-  { to: '/history', label: 'History', glyph: icon.history },
-]
+  { to: '/', key: 'home', glyph: icon.home },
+  { to: '/courses', key: 'courses', glyph: icon.courses },
+  { to: '/players', key: 'players', glyph: icon.players },
+  { to: '/history', key: 'history', glyph: icon.history },
+] as const
 
 function isActive(pathname: string, to: string) {
   return to === '/' ? pathname === '/' : pathname.startsWith(to)
@@ -18,17 +19,18 @@ function isActive(pathname: string, to: string) {
 
 export function TabBar() {
   const { pathname } = useLocation()
+  const { t } = useI18n()
   return (
     <Box
       component="nav"
-      aria-label="Main"
-      sx={(t) => ({
+      aria-label={t.tabs.label}
+      sx={(theme) => ({
         flex: 'none',
         display: 'flex',
         justifyContent: 'space-around',
         p: '10px 8px 26px',
         bgcolor: 'surface.raised',
-        borderRadius: `${t.radius.lg}px ${t.radius.lg}px 0 0`,
+        borderRadius: `${theme.radius.lg}px ${theme.radius.lg}px 0 0`,
       })}
     >
       {tabs.map((tab) => {
@@ -50,19 +52,19 @@ export function TabBar() {
             }}
           >
             <Box
-              sx={(t) => ({
+              sx={(theme) => ({
                 width: 56,
                 height: 32,
                 borderRadius: '16px',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                bgcolor: active ? alpha(t.palette.primary.main, 0.14) : 'transparent',
+                bgcolor: active ? alpha(theme.palette.primary.main, 0.14) : 'transparent',
               })}
             >
               <Icon>{tab.glyph}</Icon>
             </Box>
-            {tab.label}
+            {t.tabs[tab.key]}
           </ButtonBase>
         )
       })}
