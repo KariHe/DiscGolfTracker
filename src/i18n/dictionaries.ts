@@ -67,6 +67,9 @@ const en = {
     saveLayout: 'Save layout',
     tapToChange: 'Tap a hole to change par',
     parHole: (hole: number, par: number) => `Par hole ${hole}: ${par}`,
+    lengthHole: (hole: number) => `Length hole ${hole}`,
+    holeLabel: (hole: number) => `Hole ${hole}`,
+    meters: 'm',
     usedNotice: (name: string) => `This layout has rounds. Saving creates a new ${name} and archives this one.`,
   },
   players: {
@@ -101,6 +104,7 @@ const en = {
     finishRound: 'Finish round',
     deleteActive: 'Delete active round',
     par: (n: number) => `Par ${n}`,
+    length: (m: number) => `${m} m`,
     goToHole: (hole: number) => `Go to hole ${hole}`,
     thru: (hole: number) => `thru ${hole}`,
     setThrows: (name: string, strokes: number, label: string) =>
@@ -208,6 +212,9 @@ const fi: Dictionary = {
     saveLayout: 'Tallenna layout',
     tapToChange: 'Napauta väylää vaihtaaksesi parin',
     parHole: (hole, par) => `Väylän ${hole} par: ${par}`,
+    lengthHole: (hole) => `Väylän ${hole} pituus`,
+    holeLabel: (hole) => `Väylä ${hole}`,
+    meters: 'm',
     usedNotice: (name) => `Tällä layoutilla on kierroksia. Tallennus luo uuden layoutin ${name} ja arkistoi tämän.`,
   },
   players: {
@@ -242,6 +249,7 @@ const fi: Dictionary = {
     finishRound: 'Päätä kierros',
     deleteActive: 'Poista käynnissä oleva kierros',
     par: (n) => `Par ${n}`,
+    length: (m) => `${m} m`,
     goToHole: (hole) => `Siirry väylälle ${hole}`,
     thru: (hole) => `${hole} väylän jälkeen`,
     setThrows: (name, strokes, label) => `Aseta heitot pelaajalle ${name}, nyt ${strokes}, ${label}`,

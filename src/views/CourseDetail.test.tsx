@@ -71,4 +71,66 @@ describe('Layout management', () => {
       expect(fresh.archived).toBe(false)
     })
   })
+
+  it('saves optional per-hole lengths; blank and 0 mean unknown', async () => {
+    const storage = createMemoryStorage()
+    const course = await storage.save('courses', { name: 'Kivilahti' })
+    await storage.save('layouts', { courseId: course.id, name: 'Short 3', pars: [3, 4, 3] })
+    renderCourseDetail(storage, course.id)
+
+    fireEvent.click(await screen.findByRole('button', { name: /^Short 3/ }))
+    fireEvent.change(screen.getByLabelText('Length hole 1'), { target: { value: '85' } })
+    fireEvent.change(screen.getByLabelText('Length hole 2'), { target: { value: '0' } })
+    fireEvent.change(screen.getByLabelText('Length hole 3'), { target: { value: '12a345' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Save layout' }))
+
+    await waitFor(async () => {
+      const [saved] = await storage.list('layouts')
+      expect(saved.lengths).toEqual([85, undefined, 123])
+    })
+  })
+
+  it('saves length-only edits of a used layout in place (ADR-0002 exemption)', async () => {
+    const storage = createMemoryStorage()
+    const course = await storage.save('courses', { name: 'Kivilahti' })
+    const layout = await storage.save('layouts', { courseId: course.id, name: 'Championship 18', pars: [3, 4, 3] })
+    await storage.save('rounds', { finished: true, layoutId: layout.id, playerIds: [] })
+    renderCourseDetail(storage, course.id)
+
+    fireEvent.click(await screen.findByRole('button', { name: /^Championship 18/ }))
+    fireEvent.change(screen.getByLabelText('Length hole 2'), { target: { value: '110' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Save layout' }))
+
+    await waitFor(async () => {
+      const layouts = await storage.list('layouts')
+      expect(layouts).toHaveLength(1)
+      expect(layouts[0].id).toBe(layout.id)
+      expect(layouts[0].archived).toBeFalsy()
+      expect(layouts[0].lengths).toEqual([undefined, 110, undefined])
+    })
+  })
+
+  it('forks a used layout on par change and carries the edited lengths', async () => {
+    const storage = createMemoryStorage()
+    const course = await storage.save('courses', { name: 'Kivilahti' })
+    const layout = await storage.save('layouts', { courseId: course.id, name: 'Championship 18', pars: [3, 4, 3], lengths: [90, 120, 80] })
+    await storage.save('rounds', { finished: true, layoutId: layout.id, playerIds: [] })
+    renderCourseDetail(storage, course.id)
+
+    fireEvent.click(await screen.findByRole('button', { name: /^Championship 18/ }))
+    fireEvent.click(screen.getByRole('button', { name: 'Par hole 1: 3' }))
+    fireEvent.change(screen.getByLabelText('Length hole 3'), { target: { value: '95' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Save layout' }))
+
+    await waitFor(async () => {
+      const layouts = await storage.list('layouts')
+      expect(layouts).toHaveLength(2)
+      const old = layouts.find((l) => l.id === layout.id)!
+      expect(old.archived).toBe(true)
+      expect(old.lengths).toEqual([90, 120, 80])
+      const fresh = layouts.find((l) => l.id !== layout.id)!
+      expect(fresh.pars).toEqual([4, 4, 3])
+      expect(fresh.lengths).toEqual([90, 120, 95])
+    })
+  })
 })

@@ -9,7 +9,7 @@ A physical disc golf course, identified by name (and location), offering one or 
 _Avoid_: track, park
 
 **Layout**:
-A named hole configuration on a **Course** (hole count plus par per hole). A Layout with no recorded **Rounds** is freely editable; once any Round uses it, it cannot change — editing produces a new Layout with the same name and **Archives** the old one.
+A named hole configuration on a **Course** (hole count, par per hole, and optional length in metres per hole). A Layout with no recorded **Rounds** is freely editable; once any Round uses it, its pars cannot change (hole lengths stay editable, being cosmetic) — editing produces a new Layout with the same name and **Archives** the old one.
 _Avoid_: version, configuration, tee setup
 
 **Player**:

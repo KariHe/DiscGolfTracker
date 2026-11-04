@@ -5,6 +5,7 @@ import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'
 import ButtonBase from '@mui/material/ButtonBase'
 import Card from '@mui/material/Card'
+import Chip from '@mui/material/Chip'
 import Dialog from '@mui/material/Dialog'
 import DialogTitle from '@mui/material/DialogTitle'
 import Drawer from '@mui/material/Drawer'
@@ -113,6 +114,7 @@ export default function Round() {
   }
 
   const par = layout.pars[hole]
+  const length = layout.lengths?.[hole]
   const isLastHole = hole === layout.pars.length - 1
   const strokesOf = (player: Player) => round.scores?.[player.id]?.[hole] ?? par
 
@@ -156,7 +158,12 @@ export default function Round() {
         <Typography variant="overline" color="primary">
           {t.home.holeOf(hole + 1, layout.pars.length)}
         </Typography>
-        <Typography variant="h1" component="p" sx={{ mt: 0.5 }}>{t.round.par(par)}</Typography>
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1.5, mt: 0.5 }}>
+          <Typography variant="h1" component="p">{t.round.par(par)}</Typography>
+          {length !== undefined && (
+            <Chip label={t.round.length(length)} />
+          )}
+        </Box>
         <Box sx={{ display: 'flex', gap: 0.5, mt: 1.5 }}>
           {layout.pars.map((_, index) => (
             <ButtonBase

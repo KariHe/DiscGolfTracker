@@ -9,5 +9,6 @@ Editing a Layout that has recorded history would silently re-baseline every old 
 
 ## Consequences
 
+- Exception: optional per-hole lengths are cosmetic (no effect on totals vs par), so they remain editable in place on a used Layout; only a par change forks
 - "Layout" and "archived layout": archived ones stay selectable inside historical rounds but never offered when creating a new one
 - Related rule (same rationale): Courses and Players referenced by history can only be archived, not deleted

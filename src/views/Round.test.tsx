@@ -106,4 +106,15 @@ describe('Scorekeeper round', () => {
     await waitFor(() => expect(screen.getByText('No active round')).toBeTruthy())
     expect(screen.getByRole('link', { name: 'Start a round' })).toBeTruthy()
   })
+
+  it('shows the hole length only when set', async () => {
+    const { storage, layout, player } = await seededRound()
+    await storage.save('layouts', { ...layout, lengths: [123, undefined] })
+    await storage.save('rounds', { layoutId: layout.id, playerIds: [player.id] })
+    renderAt(storage, '/round')
+
+    expect(await screen.findByText('123 m')).toBeTruthy()
+    fireEvent.click(screen.getByRole('button', { name: 'Go to hole 2' }))
+    expect(screen.queryByText(/ m$/)).toBeNull()
+  })
 })

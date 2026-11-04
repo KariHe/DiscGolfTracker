@@ -13,6 +13,8 @@ export interface Layout {
   courseId: string
   name: string
   pars: number[]
+  /** Metres per hole; optional, cosmetic (exempt from ADR-0002 freeze). */
+  lengths?: (number | undefined)[]
   archived?: boolean
 }
 

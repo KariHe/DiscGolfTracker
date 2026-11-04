@@ -54,21 +54,27 @@ function LayoutEditor({ layout, used, onDone, onDelete }: {
   const [name, setName] = useState(layout.name)
   const [pars, setPars] = useState<number[]>(layout.pars)
   const [changed, setChanged] = useState<number | null>(null)
+  const [lengthText, setLengthText] = useState<string[]>(() => pars.map((_, i) => String(layout.lengths?.[i] ?? '')))
 
   async function save() {
     if (!name.trim()) return
-    // ADR-0002: a used Layout cannot change; editing yields a new Layout
-    // with the same name and archives the old one
-    if (used) {
+    const lengths = lengthText.map((text) => Number(text) || undefined)
+    const parsChanged = pars.some((par, i) => par !== layout.pars[i])
+    // ADR-0002: a used Layout's pars cannot change; editing them yields a new
+    // Layout with the same name and archives the old one. Lengths are exempt.
+    if (used && parsChanged) {
       await storage.save('layouts', { ...layout, archived: true })
       await storage.save('layouts', {
         courseId: layout.courseId,
         name: layout.name,
         pars,
+        lengths,
         archived: false,
       })
+    } else if (used) {
+      await storage.save('layouts', { ...layout, lengths })
     } else {
-      await storage.save('layouts', { ...layout, name: name.trim(), pars })
+      await storage.save('layouts', { ...layout, name: name.trim(), pars, lengths })
     }
     onDone()
   }
@@ -87,20 +93,30 @@ function LayoutEditor({ layout, used, onDone, onDelete }: {
       <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700 }}>
         {t.courseDetail.tapToChange} · <Box component="span" sx={{ color: 'primary.main' }}>{t.common.par(parTotal(pars))}</Box>
       </Typography>
-      <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(6, minmax(0, 1fr))', gap: 0.75 }}>
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.75 }}>
         {pars.map((par, index) => (
-          <ButtonBase
-            key={index}
-            aria-label={t.courseDetail.parHole(index + 1, par)}
-            onClick={() => bump(index)}
-            sx={{
-              height: 52, flexDirection: 'column', gap: '1px', borderRadius: '14px', border: 2,
-              borderColor: index === changed ? 'primary.main' : 'surface.elevated', bgcolor: 'surface.elevated',
-            }}
-          >
-            <Typography component="span" sx={{ fontSize: 10, fontWeight: 700, color: 'text.secondary' }}>{index + 1}</Typography>
-            <Typography component="span" sx={{ fontSize: 18, fontWeight: 800, lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>{par}</Typography>
-          </ButtonBase>
+          <Box key={index} sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+            <Typography component="span" sx={{ flex: 1, fontSize: 14, fontWeight: 700, color: 'text.secondary' }}>
+              {t.courseDetail.holeLabel(index + 1)}
+            </Typography>
+            <ButtonBase
+              aria-label={t.courseDetail.parHole(index + 1, par)}
+              onClick={() => bump(index)}
+              sx={{
+                width: 52, height: 40, borderRadius: '14px', border: 2,
+                borderColor: index === changed ? 'primary.main' : 'surface.elevated', bgcolor: 'surface.elevated',
+              }}
+            >
+              <Typography component="span" sx={{ fontSize: 18, fontWeight: 800, lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>{par}</Typography>
+            </ButtonBase>
+            <OutlinedInput
+              value={lengthText[index]}
+              onChange={(e) => setLengthText((prev) => prev.map((text, i) => (i === index ? e.target.value.replace(/\D/g, '').slice(0, 3) : text)))}
+              inputProps={{ 'aria-label': t.courseDetail.lengthHole(index + 1), inputMode: 'numeric' }}
+              endAdornment={<Typography component="span" variant="caption" color="text.secondary">{t.courseDetail.meters}</Typography>}
+              sx={{ width: 96, height: 40 }}
+            />
+          </Box>
         ))}
       </Box>
       {used && (
