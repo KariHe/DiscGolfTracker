@@ -6,6 +6,8 @@ import Button from '@mui/material/Button'
 import ButtonBase from '@mui/material/ButtonBase'
 import Card from '@mui/material/Card'
 import Drawer from '@mui/material/Drawer'
+import IconButton from '@mui/material/IconButton'
+import InputAdornment from '@mui/material/InputAdornment'
 import OutlinedInput from '@mui/material/OutlinedInput'
 import Typography from '@mui/material/Typography'
 import { useStorage } from '../storage/useStorage.ts'
@@ -57,6 +59,7 @@ export default function Courses() {
   const [adding, setAdding] = useState(false)
   const [name, setName] = useState('')
   const [location, setLocation] = useState('')
+  const [query, setQuery] = useState('')
 
   const reload = useCallback(async () => {
     const [listed, allLayouts] = await Promise.all([storage.list('courses'), storage.list('layouts')])
@@ -84,7 +87,11 @@ export default function Courses() {
   const layoutCount = (course: Course) =>
     layouts.filter((layout) => layout.courseId === course.id && !layout.archived).length
   const active = courses.filter((course) => !course.archived)
-  const archived = courses.filter((course) => course.archived)
+  const needle = query.trim().toLowerCase()
+  const matches = (course: Course) =>
+    !needle || `${course.name} ${course.location ?? ''}`.toLowerCase().includes(needle)
+  const shownActive = active.filter(matches)
+  const shownArchived = courses.filter((course) => course.archived && matches(course))
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, pt: 1.5, pb: 2 }}>
@@ -101,15 +108,33 @@ export default function Courses() {
         </Button>
       </Box>
 
-      {active.length === 0 && (
+      <OutlinedInput
+        placeholder={t.courses.search}
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        inputProps={{ 'aria-label': t.courses.search }}
+        endAdornment={query && (
+          <InputAdornment position="end">
+            <IconButton aria-label={t.courses.clearSearch} edge="end" onClick={() => setQuery('')}>
+              <Icon size={20}>{icon.close}</Icon>
+            </IconButton>
+          </InputAdornment>
+        )}
+        sx={{ height: 52 }}
+      />
+
+      {active.length === 0 && !needle && (
         <Typography variant="body2" color="text.secondary">{t.courses.empty}</Typography>
       )}
-      {active.map((course) => <CourseCard key={course.id} course={course} layoutCount={layoutCount(course)} />)}
+      {needle && shownActive.length === 0 && shownArchived.length === 0 && (
+        <Typography variant="body2" color="text.secondary">{t.courses.noMatching}</Typography>
+      )}
+      {shownActive.map((course) => <CourseCard key={course.id} course={course} layoutCount={layoutCount(course)} />)}
 
-      {archived.length > 0 && (
+      {shownArchived.length > 0 && (
         <>
           <Typography variant="overline" component="h2" color="text.secondary" sx={{ mt: 1.5 }}>{t.common.archived}</Typography>
-          {archived.map((course) => <CourseCard key={course.id} course={course} layoutCount={layoutCount(course)} />)}
+          {shownArchived.map((course) => <CourseCard key={course.id} course={course} layoutCount={layoutCount(course)} />)}
         </>
       )}
 

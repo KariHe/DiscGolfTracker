@@ -8,6 +8,7 @@ export const icon = {
     </>
   ),
   arrow: <path d="M5 12h14M13 6l6 6-6 6" />,
+  close: <path d="M6 6l12 12M18 6L6 18" />,
   plus: <path d="M12 5v14M5 12h14" />,
   edit: <path d="M4 20h4L19 9l-4-4L4 16v4z" />,
   chevron: <path d="M9 6l6 6-6 6" />,

@@ -48,6 +48,9 @@ const en = {
     courseName: 'Course name',
     locationOptional: 'Location (optional)',
     courseLocation: 'Course location',
+    search: 'Search courses',
+    noMatching: 'No matching courses',
+    clearSearch: 'Clear search',
   },
   courseDetail: {
     backToCourses: 'Back to courses',
@@ -193,6 +196,9 @@ const fi: Dictionary = {
     courseName: 'Radan nimi',
     locationOptional: 'Sijainti (valinnainen)',
     courseLocation: 'Radan sijainti',
+    search: 'Hae ratoja',
+    noMatching: 'Ei hakua vastaavia ratoja',
+    clearSearch: 'Tyhjennä haku',
   },
   courseDetail: {
     backToCourses: 'Takaisin radoille',
