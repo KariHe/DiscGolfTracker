@@ -5,6 +5,9 @@ import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'
 import ButtonBase from '@mui/material/ButtonBase'
 import Card from '@mui/material/Card'
+import Dialog from '@mui/material/Dialog'
+import DialogActions from '@mui/material/DialogActions'
+import DialogTitle from '@mui/material/DialogTitle'
 import IconButton from '@mui/material/IconButton'
 import InputBase from '@mui/material/InputBase'
 import Menu from '@mui/material/Menu'
@@ -57,6 +60,7 @@ export default function HistoryDetail() {
   const [editing, setEditing] = useState(false)
   const [chunk, setChunk] = useState(0)
   const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null)
+  const [confirmingDelete, setConfirmingDelete] = useState(false)
   const theme = useTheme()
 
   const reload = useCallback(async () => {
@@ -119,9 +123,8 @@ export default function HistoryDetail() {
   }
 
   async function remove() {
-    setMenuAnchor(null)
+    setConfirmingDelete(false)
     if (!round) return
-    if (!window.confirm(t.historyDetail.deleteConfirm)) return
     await storage.delete('rounds', round.id)
     navigate('/history')
   }
@@ -161,9 +164,17 @@ export default function HistoryDetail() {
           </svg>
         </IconButton>
         <Menu anchorEl={menuAnchor} open={Boolean(menuAnchor)} onClose={() => setMenuAnchor(null)}>
-          <MenuItem onClick={remove}>{t.historyDetail.deleteRound}</MenuItem>
+          <MenuItem onClick={() => { setMenuAnchor(null); setConfirmingDelete(true) }}>{t.historyDetail.deleteRound}</MenuItem>
         </Menu>
       </Box>
+
+      <Dialog open={confirmingDelete} onClose={() => setConfirmingDelete(false)}>
+        <DialogTitle>{t.historyDetail.deleteConfirm}</DialogTitle>
+        <DialogActions>
+          <Button variant="outlined" onClick={() => setConfirmingDelete(false)}>{t.common.cancel}</Button>
+          <Button onClick={remove}>{t.round.delete}</Button>
+        </DialogActions>
+      </Dialog>
 
       <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 1.5, pt: 1.5 }}>
         <Card sx={{ p: 2, borderRadius: `${theme.radius.lg}px` }}>

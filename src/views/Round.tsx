@@ -7,6 +7,7 @@ import ButtonBase from '@mui/material/ButtonBase'
 import Card from '@mui/material/Card'
 import Chip from '@mui/material/Chip'
 import Dialog from '@mui/material/Dialog'
+import DialogActions from '@mui/material/DialogActions'
 import DialogTitle from '@mui/material/DialogTitle'
 import Drawer from '@mui/material/Drawer'
 import IconButton from '@mui/material/IconButton'
@@ -40,6 +41,7 @@ export default function Round() {
   const [picking, setPicking] = useState<Player | null>(null)
   const [scorecardOpen, setScorecardOpen] = useState(false)
   const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null)
+  const [confirmingDelete, setConfirmingDelete] = useState(false)
 
   const reload = useCallback(async () => {
     const [allRounds, allLayouts, allPlayers, allCourses] = await Promise.all([
@@ -96,10 +98,9 @@ export default function Round() {
   }
 
   async function deleteActive() {
-    setMenuAnchor(null)
+    setConfirmingDelete(false)
     const current = roundRef.current
     if (!current) return
-    if (!window.confirm(t.round.deleteConfirm)) return
     await storage.delete('rounds', current.id)
     navigate('/')
   }
@@ -150,7 +151,7 @@ export default function Round() {
         </IconButton>
         <Menu anchorEl={menuAnchor} open={Boolean(menuAnchor)} onClose={() => setMenuAnchor(null)}>
           <MenuItem onClick={() => { setMenuAnchor(null); finish() }}>{t.round.finishRound}</MenuItem>
-          <MenuItem onClick={deleteActive}>{t.round.deleteActive}</MenuItem>
+          <MenuItem onClick={() => { setMenuAnchor(null); setConfirmingDelete(true) }}>{t.round.deleteActive}</MenuItem>
         </Menu>
       </Box>
 
@@ -260,6 +261,14 @@ export default function Round() {
           />
         )}
       </Drawer>
+
+      <Dialog open={confirmingDelete} onClose={() => setConfirmingDelete(false)}>
+        <DialogTitle>{t.round.deleteConfirm}</DialogTitle>
+        <DialogActions>
+          <Button variant="outlined" onClick={() => setConfirmingDelete(false)}>{t.common.cancel}</Button>
+          <Button onClick={deleteActive}>{t.round.delete}</Button>
+        </DialogActions>
+      </Dialog>
 
       <Dialog open={scorecardOpen} onClose={() => setScorecardOpen(false)} fullWidth maxWidth="sm">
         <DialogTitle>{t.round.scorecard}</DialogTitle>

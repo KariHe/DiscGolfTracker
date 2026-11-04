@@ -37,7 +37,7 @@ async function seededHistory(options: { note?: string; noScores?: boolean } = {}
 }
 
 describe('Round lifecycle', () => {
-  it('deletes the active round after confirm and returns home', async () => {
+  it('deletes the active round after confirming in the dialog and returns home', async () => {
     const { storage, layout } = await seededHistory()
     const active = await storage.save('rounds', {
       finished: false,
@@ -46,7 +46,6 @@ describe('Round lifecycle', () => {
       playerIds: [],
       scores: {},
     })
-    vi.stubGlobal("confirm", () => true)
     renderAt(storage, '/round')
 
     await waitFor(() =>
@@ -54,11 +53,12 @@ describe('Round lifecycle', () => {
     )
     fireEvent.click(screen.getByRole('button', { name: 'Round menu' }))
     fireEvent.click(screen.getByRole('menuitem', { name: 'Delete active round' }))
+    fireEvent.click(await screen.findByRole('button', { name: 'Delete' }))
     await waitFor(() => expect(screen.getByRole('heading', { name: /Let.s play/ })).toBeTruthy())
     expect(await storage.get('rounds', active.id)).toBeUndefined()
   })
 
-  it('keeps the active round when the confirm is dismissed', async () => {
+  it('keeps the active round when the delete dialog is cancelled', async () => {
     const { storage, layout, round } = await seededHistory()
     void round
     await storage.save('rounds', {
@@ -68,7 +68,6 @@ describe('Round lifecycle', () => {
       playerIds: [],
       scores: {},
     })
-    vi.stubGlobal("confirm", () => false)
     renderAt(storage, '/round')
 
     await waitFor(() =>
@@ -76,6 +75,7 @@ describe('Round lifecycle', () => {
     )
     fireEvent.click(screen.getByRole('button', { name: 'Round menu' }))
     fireEvent.click(screen.getByRole('menuitem', { name: 'Delete active round' }))
+    fireEvent.click(await screen.findByRole('button', { name: 'Cancel' }))
     expect(await storage.list('rounds')).toHaveLength(2)
   })
 
@@ -110,11 +110,11 @@ describe('Round lifecycle', () => {
   it('deletes a finished round, which re-opens hard-delete of its references', async () => {
     const { storage, round, player, course } = await seededHistory()
     const layoutUsed = await storage.get('layouts', round.layoutId as string)
-    vi.stubGlobal("confirm", () => true)
     renderAt(storage, `/history/${round.id}`)
 
     fireEvent.click(await screen.findByRole('button', { name: 'Round menu' }))
     fireEvent.click(screen.getByRole('menuitem', { name: 'Delete round' }))
+    fireEvent.click(await screen.findByRole('button', { name: 'Delete' }))
     await waitFor(() => expect(screen.getByRole('heading', { name: 'History' })).toBeTruthy())
     expect(await storage.list('rounds')).toHaveLength(0)
 
