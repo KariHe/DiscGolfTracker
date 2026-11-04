@@ -1,6 +1,6 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import { BrowserRouter } from 'react-router'
+import { HashRouter } from 'react-router'
 import './index.css'
 import App from './App.tsx'
 import { createStorageFromEnv } from './storage/index.ts'
@@ -11,9 +11,9 @@ if (root) {
   createRoot(root).render(
     <StrictMode>
       <StorageProvider storage={createStorageFromEnv()}>
-        <BrowserRouter>
+        <HashRouter>
           <App />
-        </BrowserRouter>
+        </HashRouter>
       </StorageProvider>
     </StrictMode>,
   )
