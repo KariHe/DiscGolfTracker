@@ -3,6 +3,8 @@ import ToggleButtonGroup from '@mui/material/ToggleButtonGroup'
 import { useI18n } from '../i18n/useI18n.ts'
 import { languageNames, languages, type Language } from '../i18n/dictionaries.ts'
 
+const flags: Record<Language, string> = { en: '🇬🇧', fi: '🇫🇮' }
+
 export function LanguageSwitcher() {
   const { language, setLanguage, t } = useI18n()
   return (
@@ -14,7 +16,9 @@ export function LanguageSwitcher() {
       onChange={(_, next: Language | null) => next && setLanguage(next)}
     >
       {(Object.keys(languages) as Language[]).map((code) => (
-        <ToggleButton key={code} value={code} lang={code}>{languageNames[code]}</ToggleButton>
+        <ToggleButton key={code} value={code} lang={code} aria-label={languageNames[code]}>
+          <span aria-hidden="true">{flags[code]}</span>
+        </ToggleButton>
       ))}
     </ToggleButtonGroup>
   )

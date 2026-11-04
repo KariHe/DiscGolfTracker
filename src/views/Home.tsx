@@ -63,10 +63,13 @@ export default function Home() {
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 1.5, pb: 2 }}>
-      <div>
-        <Typography variant="overline" color="text.secondary">{t.home.appName}</Typography>
-        <Typography variant="h1" sx={{ fontSize: 34, mt: 0.5 }}>{t.home.title}</Typography>
-      </div>
+      <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 2 }}>
+        <div>
+          <Typography variant="overline" color="text.secondary">{t.home.appName}</Typography>
+          <Typography variant="h1" sx={{ fontSize: 34, mt: 0.5 }}>{t.home.title}</Typography>
+        </div>
+        <LanguageSwitcher />
+      </Box>
 
       {active ? <ActiveRoundCard round={active} layout={layoutOf(active)}
         courseName={courseOf(layoutOf(active))?.name} players={playersOf(active)} /> : (
@@ -134,8 +137,6 @@ export default function Home() {
           </Card>
         )
       })}
-
-      <Box sx={{ mt: 1 }}><LanguageSwitcher /></Box>
     </Box>
   )
 }
