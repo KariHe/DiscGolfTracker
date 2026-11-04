@@ -45,7 +45,9 @@ src/
   domain/    types, scoring logic
   storage/   storage port + IndexedDB / in-memory adapters
   views/     screens (Home, Round, Courses, Players, History, ...)
-  components/ theme/ i18n/
+  components/ other shared components
+  theme/     styles / theme 
+  i18n/      localisation
 docs/adr/    architecture decisions
 ```
 
