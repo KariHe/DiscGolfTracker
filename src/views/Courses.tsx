@@ -9,12 +9,14 @@ import Drawer from '@mui/material/Drawer'
 import IconButton from '@mui/material/IconButton'
 import InputAdornment from '@mui/material/InputAdornment'
 import OutlinedInput from '@mui/material/OutlinedInput'
+import Snackbar from '@mui/material/Snackbar'
 import Typography from '@mui/material/Typography'
 import { useStorage } from '../storage/useStorage.ts'
 import type { Course, Layout } from '../domain/types.ts'
 import { useI18n } from '../i18n/useI18n.ts'
 import { Icon } from '../components/Icon.tsx'
 import { icon } from '../components/icons.tsx'
+import { importCourses } from '../domain/importCourses.ts'
 
 function CourseCard({ course, layoutCount }: { course: Course; layoutCount: number }) {
   const { t } = useI18n()
@@ -60,6 +62,7 @@ export default function Courses() {
   const [name, setName] = useState('')
   const [location, setLocation] = useState('')
   const [query, setQuery] = useState('')
+  const [message, setMessage] = useState<string | null>(null)
 
   const reload = useCallback(async () => {
     const [listed, allLayouts] = await Promise.all([storage.list('courses'), storage.list('layouts')])
@@ -84,6 +87,17 @@ export default function Courses() {
     reload()
   }
 
+  async function initialize() {
+    try {
+      const { default: bundled } = await import('../data/southern-finland-courses.json')
+      const r = await importCourses(storage, bundled)
+      setMessage(t.courses.imported(r.courses, r.layouts, r.lengthsUpdated, r.skipped))
+    } catch {
+      setMessage(t.courses.importFailed)
+    }
+    reload()
+  }
+
   const layoutCount = (course: Course) =>
     layouts.filter((layout) => layout.courseId === course.id && !layout.archived).length
   const active = courses.filter((course) => !course.archived)
@@ -95,17 +109,20 @@ export default function Courses() {
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, pt: 1.5, pb: 2 }}>
-      <Box sx={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', mb: 1 }}>
+      <Box sx={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', flexWrap: 'wrap', gap: 1, mb: 1 }}>
         <div>
           <Typography variant="overline" color="text.secondary">
             {t.courses.count(active.length)}
           </Typography>
           <Typography variant="h1" sx={{ fontSize: 34, mt: 0.5 }}>{t.tabs.courses}</Typography>
         </div>
-        <Button size="small" onClick={() => setAdding(true)} startIcon={<Icon size={20}>{icon.plus}</Icon>}
-          sx={{ gap: 0.75, pl: 1.5 }}>
-          {t.common.add}
-        </Button>
+        <Box sx={{ display: 'flex', gap: 1 }}>
+          <Button size="small" variant="outlined" onClick={initialize} sx={{ whiteSpace: 'nowrap', px: 1.5 }}>{t.courses.initialize}</Button>
+          <Button size="small" onClick={() => setAdding(true)} startIcon={<Icon size={20}>{icon.plus}</Icon>}
+            sx={{ gap: 0.75, pl: 1.5 }}>
+            {t.common.add}
+          </Button>
+        </Box>
       </Box>
 
       <OutlinedInput
@@ -137,6 +154,8 @@ export default function Courses() {
           {shownArchived.map((course) => <CourseCard key={course.id} course={course} layoutCount={layoutCount(course)} />)}
         </>
       )}
+
+      <Snackbar open={message !== null} autoHideDuration={6000} onClose={() => setMessage(null)} message={message} />
 
       <Drawer
         anchor="bottom"

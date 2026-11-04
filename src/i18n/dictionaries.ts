@@ -51,6 +51,10 @@ const en = {
     search: 'Search courses',
     noMatching: 'No matching courses',
     clearSearch: 'Clear search',
+    initialize: 'Initialize courses',
+    imported: (c: number, l: number, u: number, s: number) =>
+      `Imported ${c} courses, ${l} layouts; updated lengths on ${u}; skipped ${s}`,
+    importFailed: 'Import failed',
   },
   courseDetail: {
     backToCourses: 'Back to courses',
@@ -199,6 +203,10 @@ const fi: Dictionary = {
     search: 'Hae ratoja',
     noMatching: 'Ei hakua vastaavia ratoja',
     clearSearch: 'Tyhjennä haku',
+    initialize: 'Alusta radat',
+    imported: (c, l, u, s) =>
+      `Tuotu ${c} rataa, ${l} layoutia; pituudet päivitetty ${u}; ohitettu ${s}`,
+    importFailed: 'Tuonti epäonnistui',
   },
   courseDetail: {
     backToCourses: 'Takaisin radoille',

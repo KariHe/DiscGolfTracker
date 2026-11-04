@@ -31,6 +31,17 @@ describe('Courses', () => {
     expect(courses[0]).toMatchObject({ name: 'Kivilahti', location: 'Helsinki' })
   })
 
+  it('initializes courses and layouts from the bundled file and reports the result', async () => {
+    const storage = createMemoryStorage()
+    renderCourses(storage)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Initialize courses' }))
+    expect(await screen.findByText(/^Imported \d+ courses, \d+ layouts/)).toBeTruthy()
+    expect((await storage.list('courses')).length).toBeGreaterThan(50)
+    expect((await storage.list('layouts')).length).toBeGreaterThan(50)
+    expect(await screen.findByRole('link', { name: /^Kaatis|Frisbeegolfkenttä Kaatis/ })).toBeTruthy()
+  })
+
   it('renames a course from its detail view', async () => {
     const storage = createMemoryStorage()
     const course = await storage.save('courses', { name: 'Kivilahti' })
