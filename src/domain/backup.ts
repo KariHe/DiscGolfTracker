@@ -139,6 +139,44 @@ async function validateBackup(file: Record<string, unknown>, storage: Storage): 
   return result
 }
 
+type GapFill<T> = (local: T, backup: T) => T | undefined
+
+/** Local values win; only empty fields are filled. Returns undefined when nothing changes. */
+const fillGaps: { [K in keyof BackupData]: GapFill<BackupData[K][number]> } = {
+  courses: (local, backup) =>
+    !local.location && backup.location ? { ...local, location: backup.location } : undefined,
+  layouts: (local, backup) => {
+    if (!backup.lengths || local.pars.length !== backup.pars.length) return undefined
+    const lengths = local.pars.map((_, hole) => local.lengths?.[hole] ?? backup.lengths?.[hole])
+    return lengths.some((length, hole) => length !== local.lengths?.[hole]) ? { ...local, lengths } : undefined
+  },
+  players: () => undefined,
+  rounds: (local, backup) => {
+    const filled: Round = { ...local, date: local.date ?? backup.date, note: local.note ?? backup.note }
+    if (filled.date === undefined) delete filled.date
+    if (filled.note === undefined) delete filled.note
+    if (local.layoutId === backup.layoutId) {
+      for (const id of local.playerIds ?? []) {
+        const from = backup.scores?.[id]
+        if (!from) continue
+        const own = local.scores?.[id] ?? []
+        const holes = Array.from({ length: Math.max(own.length, from.length) }, (_, hole) => own[hole] ?? from[hole])
+        if (holes.some((strokes, hole) => strokes !== own[hole])) filled.scores = { ...filled.scores, [id]: holes }
+      }
+    }
+    const changed = filled.date !== local.date || filled.note !== local.note || filled.scores !== local.scores
+    return changed ? filled : undefined
+  },
+}
+
+/** Never gap-filled: archived records, layouts of archived courses, and the Active Round. */
+async function isProtected(storage: Storage, kind: keyof BackupData, local: BackupData[keyof BackupData][number]) {
+  if ('archived' in local && local.archived) return true
+  if (kind === 'rounds') return (local as Round).finished !== true
+  if (kind === 'layouts') return (await storage.get('courses', (local as Layout).courseId))?.archived === true
+  return false
+}
+
 export type KindCounts = { added: number; updated: number; skipped: number }
 export type RestoreResult = Record<keyof BackupData, KindCounts>
 
@@ -151,8 +189,16 @@ export async function restoreBackup(
   for (const kind of KINDS) {
     const counts: KindCounts = { added: 0, updated: 0, skipped: 0 }
     for (const record of data[kind]) {
-      if (await storage.get(kind, record.id)) {
-        counts.skipped++
+      const local = await storage.get(kind, record.id)
+      if (local) {
+        const filled = !(await isProtected(storage, kind, local))
+          && (fillGaps[kind] as GapFill<typeof record>)(local, record)
+        if (filled) {
+          await storage.save(kind, filled)
+          counts.updated++
+        } else {
+          counts.skipped++
+        }
         continue
       }
       await storage.save(kind, record)

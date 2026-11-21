@@ -4,12 +4,12 @@
 
 **Blocked by:** 03 (Restore, add new records)
 
-**Status:** ready-for-agent
+**Status:** resolved
 
-- [ ] Course: `location` is filled when the local one is empty
-- [ ] Layout: per-hole lengths are filled when the hole counts match; pars are never changed (ADR-0002)
-- [ ] Round: `note` and `date` are filled when missing; missing hole scores are filled only when the layout is the same, and only for players in both rounds; no players are added
-- [ ] `archived` is never changed; archived local records (and layouts of archived local courses) are left alone
-- [ ] The local Active Round is left alone even when the Backup has the same id finished
-- [ ] A restore that fills nothing reports the record as skipped; re-running is still idempotent
-- [ ] Domain tests per rule; typecheck, lint and tests pass
+- [x] Course: `location` is filled when the local one is empty
+- [x] Layout: per-hole lengths are filled when the hole counts match; pars are never changed (ADR-0002)
+- [x] Round: `note` and `date` are filled when missing; missing hole scores are filled only when the layout is the same, and only for players in both rounds; no players are added
+- [x] `archived` is never changed; archived local records (and layouts of archived local courses) are left alone
+- [x] The local Active Round is left alone even when the Backup has the same id finished
+- [x] A restore that fills nothing reports the record as skipped; re-running is still idempotent
+- [x] Domain tests per rule; typecheck, lint and tests pass

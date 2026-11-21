@@ -166,3 +166,148 @@ describe('restoreBackup', () => {
     expect((await target.get('layouts', 'l1'))?.lengths).toEqual([60, undefined])
   })
 })
+
+describe('restoreBackup gap fill on existing ids', () => {
+  const fileWith = (data: Partial<Record<'courses' | 'layouts' | 'players' | 'rounds', unknown[]>>) => ({
+    format: 'discgolf-backup', version: 1, exportedAt: NOW.toISOString(),
+    data: { courses: [], layouts: [], players: [], rounds: [], ...data },
+  })
+
+  it('fills an empty course location and keeps a local one', async () => {
+    const target = createMemoryStorage()
+    await target.save('courses', { id: 'c1', name: 'Local name' })
+    await target.save('courses', { id: 'c2', name: 'Two', location: 'Espoo' })
+
+    const result = await restoreBackup(target, fileWith({
+      courses: [{ id: 'c1', name: 'Backup name', location: 'Helsinki' }, { id: 'c2', name: 'Two', location: 'Vantaa' }],
+    }))
+
+    expect(await target.get('courses', 'c1')).toEqual({ id: 'c1', name: 'Local name', location: 'Helsinki' })
+    expect(await target.get('courses', 'c2')).toEqual({ id: 'c2', name: 'Two', location: 'Espoo' })
+    expect(result.courses).toEqual({ added: 0, updated: 1, skipped: 1 })
+  })
+  it('fills empty hole lengths when hole counts match, never pars', async () => {
+    const target = createMemoryStorage()
+    await target.save('courses', { id: 'c1', name: 'Course' })
+    await target.save('layouts', { id: 'l1', courseId: 'c1', name: 'Main', pars: [3, 3, 3], lengths: [50, undefined, undefined] })
+    await target.save('layouts', { id: 'l2', courseId: 'c1', name: 'Other', pars: [3, 3] })
+
+    const result = await restoreBackup(target, fileWith({
+      layouts: [
+        { id: 'l1', courseId: 'c1', name: 'Main', pars: [4, 4, 4], lengths: [99, 70, null] },
+        { id: 'l2', courseId: 'c1', name: 'Other', pars: [3, 3, 3], lengths: [1, 2, 3] },
+      ],
+    }))
+
+    expect(await target.get('layouts', 'l1')).toEqual(
+      { id: 'l1', courseId: 'c1', name: 'Main', pars: [3, 3, 3], lengths: [50, 70, undefined] })
+    expect(await target.get('layouts', 'l2')).toEqual({ id: 'l2', courseId: 'c1', name: 'Other', pars: [3, 3] })
+    expect(result.layouts).toEqual({ added: 0, updated: 1, skipped: 1 })
+  })
+  async function withRoundRefs() {
+    const target = createMemoryStorage()
+    await target.save('courses', { id: 'c1', name: 'Course' })
+    await target.save('layouts', { id: 'l1', courseId: 'c1', name: 'Main', pars: [3, 3, 3] })
+    await target.save('layouts', { id: 'l2', courseId: 'c1', name: 'Other', pars: [3, 3, 3] })
+    for (const id of ['p1', 'p2', 'p3']) await target.save('players', { id, name: id })
+    return target
+  }
+
+  it('fills a missing round note and date, keeping local ones', async () => {
+    const target = await withRoundRefs()
+    await target.save('rounds', { id: 'r1', layoutId: 'l1', finished: true })
+    await target.save('rounds', { id: 'r2', layoutId: 'l1', date: '2026-11-02', note: 'Local', finished: true })
+
+    await restoreBackup(target, fileWith({
+      rounds: [
+        { id: 'r1', layoutId: 'l1', date: '2026-11-01', note: 'Windy', finished: true },
+        { id: 'r2', layoutId: 'l1', date: '2026-01-01', note: 'Backup', finished: true },
+      ],
+    }))
+
+    expect(await target.get('rounds', 'r1')).toMatchObject({ date: '2026-11-01', note: 'Windy' })
+    expect(await target.get('rounds', 'r2')).toMatchObject({ date: '2026-11-02', note: 'Local' })
+  })
+
+  it('fills missing hole scores on the same layout for shared players only, never adding players', async () => {
+    const target = await withRoundRefs()
+    await target.save('rounds', {
+      id: 'r1', layoutId: 'l1', playerIds: ['p1', 'p2'], finished: true,
+      scores: { p1: [3, undefined, undefined], p2: [4, 4, 4] },
+    })
+
+    const result = await restoreBackup(target, fileWith({
+      rounds: [{
+        id: 'r1', layoutId: 'l1', playerIds: ['p1', 'p2', 'p3'], finished: true,
+        scores: { p1: [5, 2, null], p2: [1, 1, 1], p3: [3, 3, 3] },
+      }],
+    }))
+
+    expect(await target.get('rounds', 'r1')).toEqual({
+      id: 'r1', layoutId: 'l1', playerIds: ['p1', 'p2'], finished: true,
+      scores: { p1: [3, 2, undefined], p2: [4, 4, 4] },
+    })
+    expect(result.rounds).toEqual({ added: 0, updated: 1, skipped: 0 })
+  })
+
+  it('fills scores for a shared player with no local scores yet', async () => {
+    const target = await withRoundRefs()
+    await target.save('rounds', { id: 'r1', layoutId: 'l1', playerIds: ['p1'], finished: true })
+
+    await restoreBackup(target, fileWith({
+      rounds: [{ id: 'r1', layoutId: 'l1', playerIds: ['p1'], finished: true, scores: { p1: [3, 3, 3] } }],
+    }))
+
+    expect((await target.get('rounds', 'r1'))?.scores).toEqual({ p1: [3, 3, 3] })
+  })
+
+  it('leaves scores alone when the layout differs', async () => {
+    const target = await withRoundRefs()
+    await target.save('rounds', { id: 'r1', layoutId: 'l1', playerIds: ['p1'], finished: true, scores: { p1: [3, undefined, 3] } })
+
+    const result = await restoreBackup(target, fileWith({
+      rounds: [{ id: 'r1', layoutId: 'l2', playerIds: ['p1'], finished: true, scores: { p1: [3, 3, 3] } }],
+    }))
+
+    expect((await target.get('rounds', 'r1'))?.scores).toEqual({ p1: [3, undefined, 3] })
+    expect(result.rounds).toEqual({ added: 0, updated: 0, skipped: 1 })
+  })
+  it('leaves archived records, layouts of archived courses and the Active Round alone', async () => {
+    const target = await withRoundRefs()
+    await target.save('courses', { id: 'old', name: 'Old', archived: true })
+    await target.save('layouts', { id: 'lo', courseId: 'old', name: 'Main', pars: [3] })
+    await target.save('layouts', { id: 'la', courseId: 'c1', name: 'Gone', pars: [3], archived: true })
+    await target.save('rounds', { id: 'active', layoutId: 'l1', playerIds: ['p1'], scores: { p1: [3] } })
+
+    const result = await restoreBackup(target, fileWith({
+      courses: [{ id: 'old', name: 'Old', location: 'Turku' }],
+      layouts: [
+        { id: 'lo', courseId: 'old', name: 'Main', pars: [3], lengths: [80] },
+        { id: 'la', courseId: 'c1', name: 'Gone', pars: [3], lengths: [80] },
+      ],
+      rounds: [{ id: 'active', layoutId: 'l1', playerIds: ['p1'], finished: true, note: 'Done', scores: { p1: [3, 3, 3] } }],
+    }))
+
+    expect(await target.get('courses', 'old')).toEqual({ id: 'old', name: 'Old', archived: true })
+    expect(await target.get('layouts', 'lo')).toEqual({ id: 'lo', courseId: 'old', name: 'Main', pars: [3] })
+    expect(await target.get('layouts', 'la')).toEqual({ id: 'la', courseId: 'c1', name: 'Gone', pars: [3], archived: true })
+    expect(await target.get('rounds', 'active')).toEqual({ id: 'active', layoutId: 'l1', playerIds: ['p1'], scores: { p1: [3] } })
+    expect(result).toMatchObject({
+      courses: { updated: 0, skipped: 1 }, layouts: { updated: 0, skipped: 2 }, rounds: { updated: 0, skipped: 1 },
+    })
+  })
+  it('reports nothing updated when the same file is restored again after filling', async () => {
+    const target = await withRoundRefs()
+    await target.save('rounds', { id: 'r1', layoutId: 'l1', playerIds: ['p1'], finished: true, scores: { p1: [3, undefined, 3] } })
+    const file = fileWith({
+      rounds: [{ id: 'r1', layoutId: 'l1', playerIds: ['p1'], finished: true, note: 'Windy', scores: { p1: [3, 4, 3] } }],
+      layouts: [{ id: 'l1', courseId: 'c1', name: 'Main', pars: [3, 3, 3], lengths: [50, 60, 70] }],
+    })
+    await restoreBackup(target, file)
+
+    const again = await restoreBackup(target, file)
+
+    expect(again.rounds).toEqual({ added: 0, updated: 0, skipped: 1 })
+    expect(again.layouts).toEqual({ added: 0, updated: 0, skipped: 1 })
+  })
+})
