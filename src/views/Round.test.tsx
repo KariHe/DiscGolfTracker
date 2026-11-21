@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { MemoryRouter } from 'react-router'
 import App from '../App.tsx'
 import type { Storage } from '../storage/port.ts'
@@ -97,7 +97,52 @@ describe('Scorekeeper round', () => {
     await waitFor(() => expect(screen.getByText('Hole 2 of 2')).toBeTruthy())
     const [saved] = await storage.list('rounds')
     expect(saved.scores?.[player.id]?.[0]).toBe(3)
+    fireEvent.click(screen.getByRole('dialog', { name: 'Hole 2' }))
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
     expect(screen.getByRole('button', { name: 'Finish round' })).toBeTruthy()
+  })
+
+  it('shows the next hole and teeing order after finish hole, then closes after 4 s', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true })
+    try {
+      const { storage, layout, player } = await seededRound()
+      await storage.save('layouts', { ...layout, lengths: [80, 95] })
+      const nadja = await storage.save('players', { name: 'Nadja' })
+      await storage.save('rounds', {
+        layoutId: layout.id,
+        playerIds: [player.id, nadja.id],
+        scores: { [player.id]: [4], [nadja.id]: [2] },
+      })
+      renderAt(storage, '/round')
+
+      fireEvent.click(await screen.findByRole('button', { name: 'Go to hole 1' }))
+      fireEvent.click(screen.getByRole('button', { name: 'Finish hole 1' }))
+      const splash = await screen.findByRole('dialog', { name: 'Hole 2' })
+      expect(within(splash).getByText('Par 4 · 95 m')).toBeTruthy()
+      const rows = within(within(splash).getByRole('list', { name: 'Teeing order' })).getAllByRole('listitem')
+      expect(rows.map((row) => row.textContent)).toEqual(['1.Nadja2 · Birdie', '2.Kari4 · Bogey'])
+
+      act(() => { vi.advanceTimersByTime(3900) })
+      expect(screen.getByRole('dialog', { name: 'Hole 2' })).toBeTruthy()
+      act(() => { vi.advanceTimersByTime(100) })
+      await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('shows no splash on progress-bar jumps or when finishing the last hole', async () => {
+    const { storage, layout, player } = await seededRound()
+    await storage.save('rounds', { layoutId: layout.id, playerIds: [player.id], scores: { [player.id]: [3] } })
+    renderAt(storage, '/round')
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Go to hole 2' }))
+    expect(screen.getByText('Hole 2 of 2')).toBeTruthy()
+    expect(screen.queryByRole('dialog')).toBeNull()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Finish round' }))
+    await waitFor(() => expect(screen.getByRole('heading', { name: 'History' })).toBeTruthy())
+    expect(screen.queryByRole('dialog')).toBeNull()
   })
 
   it('shows no active round when none exists', async () => {

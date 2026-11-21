@@ -126,6 +126,8 @@ const en = {
     throwsOnHole: (hole: number) => `Throws on hole ${hole} · scroll to choose`,
     throwWheel: 'Throw count wheel',
     setScore: 'Set score',
+    hole: (hole: number) => `Hole ${hole}`,
+    teeingOrder: 'Teeing order',
   },
   history: {
     count: (n: number) => (n === 1 ? '1 finished round' : `${n} finished rounds`),
@@ -278,6 +280,8 @@ const fi: Dictionary = {
     throwsOnHole: (hole) => `Heitot väylällä ${hole} · vieritä valitaksesi`,
     throwWheel: 'Heittojen valintapyörä',
     setScore: 'Aseta tulos',
+    hole: (hole) => `Väylä ${hole}`,
+    teeingOrder: 'Heittojärjestys',
   },
   history: {
     count: (n) => (n === 1 ? '1 päättynyt kierros' : `${n} päättynyttä kierrosta`),

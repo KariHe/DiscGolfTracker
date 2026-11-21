@@ -59,3 +59,20 @@ export function firstIncompleteHole(round: Round, layout: Layout): number {
     ids.some((id) => typeof round.scores?.[id]?.[hole] !== 'number'))
   return index === -1 ? layout.pars.length - 1 : index
 }
+
+/**
+ * Teeing order after playing hole `playedHole`: lowest strokes on that hole first,
+ * ties keep the order from the hole before, back to the given player order.
+ */
+export function teeingOrder(
+  round: { scores?: Record<string, (number | undefined)[]> },
+  playerIds: string[],
+  playedHole: number,
+): string[] {
+  let order = [...playerIds]
+  for (let hole = 0; hole <= playedHole; hole++) {
+    const strokes = (id: string) => round.scores?.[id]?.[hole] ?? Infinity
+    order = [...order].sort((a, b) => strokes(a) - strokes(b))
+  }
+  return order
+}

@@ -17,7 +17,7 @@ import MenuItem from '@mui/material/MenuItem'
 import Typography from '@mui/material/Typography'
 import { useTheme } from '@mui/material/styles'
 import { useStorage } from '../storage/useStorage.ts'
-import { firstIncompleteHole, playerTotals, formatVsPar, scoreName, vsParLabel } from '../domain/scores.ts'
+import { firstIncompleteHole, playerTotals, formatVsPar, scoreName, teeingOrder, vsParLabel } from '../domain/scores.ts'
 import type { Course, Layout, Player, Round } from '../domain/types.ts'
 import { playerTint, scoreColor } from '../theme'
 import { useI18n } from '../i18n/useI18n.ts'
@@ -42,6 +42,8 @@ export default function Round() {
   const [scorecardOpen, setScorecardOpen] = useState(false)
   const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null)
   const [confirmingDelete, setConfirmingDelete] = useState(false)
+  const [splashHole, setSplashHole] = useState<number | null>(null)
+  const closeSplash = useCallback(() => setSplashHole(null), [])
 
   const reload = useCallback(async () => {
     const [allRounds, allLayouts, allPlayers, allCourses] = await Promise.all([
@@ -127,7 +129,10 @@ export default function Round() {
       }
     }
     if (isLastHole) await finish()
-    else setHole(hole! + 1)
+    else {
+      setHole(hole! + 1)
+      setSplashHole(hole! + 1)
+    }
   }
 
   return (
@@ -262,6 +267,17 @@ export default function Round() {
         )}
       </Drawer>
 
+      {splashHole !== null && (
+        <HoleSplash
+          hole={splashHole}
+          layout={layout}
+          players={teeingOrder(round, players.map((player) => player.id), splashHole - 1)
+            .map((id) => players.find((player) => player.id === id)!)}
+          strokesOn={(player) => round.scores?.[player.id]?.[splashHole - 1] ?? layout.pars[splashHole - 1]}
+          onClose={closeSplash}
+        />
+      )}
+
       <Dialog open={confirmingDelete} onClose={() => setConfirmingDelete(false)}>
         <DialogTitle>{t.round.deleteConfirm}</DialogTitle>
         <DialogActions>
@@ -319,6 +335,61 @@ export default function Round() {
         </Box>
       </Dialog>
     </Box>
+  )
+}
+
+const SPLASH_MS = 4000
+
+function HoleSplash({ hole, layout, players, strokesOn, onClose }: {
+  hole: number
+  layout: Layout
+  players: Player[]
+  strokesOn: (player: Player) => number
+  onClose: () => void
+}) {
+  const { t } = useI18n()
+  const playedPar = layout.pars[hole - 1]
+  const length = layout.lengths?.[hole]
+
+  useEffect(() => {
+    const timer = setTimeout(onClose, SPLASH_MS)
+    return () => clearTimeout(timer)
+  }, [onClose])
+
+  return (
+    <Dialog
+      open
+      fullScreen
+      onClose={onClose}
+      aria-labelledby="hole-splash-title"
+      slotProps={{ paper: { onClick: onClose, sx: { bgcolor: 'primary.main', color: 'primary.contrastText', cursor: 'pointer' } } }}
+    >
+      <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', gap: 4, p: 3 }}>
+        <Box sx={{ textAlign: 'center' }}>
+          <Typography id="hole-splash-title" variant="h1" component="h2">{t.round.hole(hole + 1)}</Typography>
+          <Typography variant="h5" component="p" sx={{ mt: 1 }}>
+            {t.round.par(layout.pars[hole])}{length !== undefined && ` · ${t.round.length(length)}`}
+          </Typography>
+        </Box>
+        <Box sx={{ width: '100%', maxWidth: 360 }}>
+          <Typography variant="overline" component="h3" sx={{ textAlign: 'center' }}>{t.round.teeingOrder}</Typography>
+          <Box component="ol" aria-label={t.round.teeingOrder} sx={{ listStyle: 'none', p: 0, m: 0 }}>
+            {players.map((player, index) => {
+              const strokes = strokesOn(player)
+              return (
+                <Box component="li" key={player.id} sx={{ display: 'flex', alignItems: 'baseline', gap: 1.5, py: 0.75 }}>
+                  <Typography variant="h5" component="span" sx={{ width: 24 }}>{index + 1}.</Typography>
+                  <Typography variant="h5" component="span" sx={{ flex: 1 }} noWrap>{player.name}</Typography>
+                  <Typography variant="subtitle1" component="span">
+                    {strokes} · {t.scoreNames[scoreName(strokes, playedPar)]}
+                  </Typography>
+                </Box>
+              )
+            })}
+          </Box>
+        </Box>
+      </Box>
+    </Dialog>
   )
 }
 
