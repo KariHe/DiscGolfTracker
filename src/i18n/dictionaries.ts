@@ -1,9 +1,20 @@
+import type { RestoreResult } from '../domain/backup.ts'
+
 const en = {
   tabs: { label: 'Main', home: 'Home', courses: 'Courses', players: 'Players', history: 'History' },
   language: { label: 'Language' },
   settings: {
     title: 'Settings', backToHome: 'Back to home', courses: 'Courses',
-    backup: 'Backup', downloadBackup: 'Download backup',
+    backup: 'Backup', downloadBackup: 'Download backup', restore: 'Restore', restoreBackup: 'Restore backup',
+    restored: (r: RestoreResult) => 'Restored. ' + ([
+      ['Courses', r.courses], ['Layouts', r.layouts], ['Players', r.players], ['Rounds', r.rounds],
+    ] as const).map(([name, c]) => `${name}: ${c.added} added, ${c.updated} updated, ${c.skipped} skipped.`).join(' '),
+    restoreErrors: {
+      notBackup: 'Not a backup file. Nothing was restored.',
+      newerVersion: 'This backup is from a newer app version. Nothing was restored.',
+      invalid: 'The backup file is damaged. Nothing was restored.',
+    },
+    restoreFailed: 'Restore stopped part way. Try again to finish it.',
   },
   common: {
     archived: 'Archived',
@@ -162,7 +173,16 @@ const fi: Dictionary = {
   language: { label: 'Kieli' },
   settings: {
     title: 'Asetukset', backToHome: 'Takaisin kotiin', courses: 'Radat',
-    backup: 'Varmuuskopio', downloadBackup: 'Lataa varmuuskopio',
+    backup: 'Varmuuskopio', downloadBackup: 'Lataa varmuuskopio', restore: 'Palautus', restoreBackup: 'Palauta varmuuskopio',
+    restored: (r) => 'Palautettu. ' + ([
+      ['Radat', r.courses], ['Layoutit', r.layouts], ['Pelaajat', r.players], ['Kierrokset', r.rounds],
+    ] as const).map(([name, c]) => `${name}: ${c.added} lisätty, ${c.updated} päivitetty, ${c.skipped} ohitettu.`).join(' '),
+    restoreErrors: {
+      notBackup: 'Tiedosto ei ole varmuuskopio. Mitään ei palautettu.',
+      newerVersion: 'Varmuuskopio on sovelluksen uudemmasta versiosta. Mitään ei palautettu.',
+      invalid: 'Varmuuskopiotiedosto on vioittunut. Mitään ei palautettu.',
+    },
+    restoreFailed: 'Palautus keskeytyi. Yritä uudelleen viimeistelläksesi sen.',
   },
   common: {
     archived: 'Arkistoitu',

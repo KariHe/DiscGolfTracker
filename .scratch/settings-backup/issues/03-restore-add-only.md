@@ -4,12 +4,12 @@
 
 **Blocked by:** 02 (Backup export)
 
-**Status:** ready-for-agent
+**Status:** resolved
 
-- [ ] A migration chain lifts older versions to the current one before validation. It is empty for now; a test injects a fake step to prove it runs
-- [ ] Rejected with nothing saved: wrong or missing `format`, non-integer version, version newer than the app ("backup from a newer app version"), bad record shape or pars/lengths, duplicate ids, any unfinished round, a reference that exists neither in the file nor on the device
-- [ ] A reference that exists only on the device passes
-- [ ] Restoring a Backup into empty storage reproduces its records
-- [ ] Restoring the same file twice changes nothing on the second run
-- [ ] Settings file picker (`.json`) shows the summary or the error; strings in English and Finnish
-- [ ] Domain and UI tests; typecheck, lint and tests pass
+- [x] A migration chain lifts older versions to the current one before validation. It is empty for now; a test injects a fake step to prove it runs
+- [x] Rejected with nothing saved: wrong or missing `format`, non-integer version, version newer than the app ("backup from a newer app version"), bad record shape or pars/lengths, duplicate ids, any unfinished round, a reference that exists neither in the file nor on the device
+- [x] A reference that exists only on the device passes
+- [x] Restoring a Backup into empty storage reproduces its records
+- [x] Restoring the same file twice changes nothing on the second run
+- [x] Settings file picker (`.json`) shows the summary or the error; strings in English and Finnish
+- [x] Domain and UI tests; typecheck, lint and tests pass

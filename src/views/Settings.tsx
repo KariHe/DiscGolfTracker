@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import type { ChangeEvent } from 'react'
 import { Link } from 'react-router'
 import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'
@@ -12,7 +13,7 @@ import { Icon } from '../components/Icon.tsx'
 import { icon } from '../components/icons.tsx'
 import { LanguageSwitcher } from '../components/LanguageSwitcher.tsx'
 import { importCourses } from '../domain/importCourses.ts'
-import { createBackup } from '../domain/backup.ts'
+import { BackupError, createBackup, restoreBackup } from '../domain/backup.ts'
 
 const pad = (n: number) => String(n).padStart(2, '0')
 const localDate = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
@@ -57,6 +58,25 @@ export default function Settings() {
     download(`discgolf-backup-${localDate(now)}.json`, new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' }))
   }
 
+  async function restore(event: ChangeEvent<HTMLInputElement>) {
+    const input = event.target
+    const file = input.files?.[0]
+    input.value = ''
+    if (!file) return
+    let parsed: unknown
+    try {
+      parsed = JSON.parse(await file.text())
+    } catch {
+      setMessage(t.settings.restoreErrors.notBackup)
+      return
+    }
+    try {
+      setMessage(t.settings.restored(await restoreBackup(storage, parsed)))
+    } catch (error) {
+      setMessage(error instanceof BackupError ? t.settings.restoreErrors[error.code] : t.settings.restoreFailed)
+    }
+  }
+
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, pt: 1.5, pb: 2 }}>
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
@@ -73,6 +93,13 @@ export default function Settings() {
       <Section title={t.settings.backup}>
         <Button size="small" variant="outlined" onClick={downloadBackup} sx={{ whiteSpace: 'nowrap', px: 1.5 }}>
           {t.settings.downloadBackup}
+        </Button>
+      </Section>
+
+      <Section title={t.settings.restore}>
+        <Button size="small" variant="outlined" component="label" sx={{ whiteSpace: 'nowrap', px: 1.5 }}>
+          {t.settings.restoreBackup}
+          <input hidden type="file" accept="application/json,.json" onChange={restore} />
         </Button>
       </Section>
 

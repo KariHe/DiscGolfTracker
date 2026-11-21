@@ -66,6 +66,36 @@ describe('Settings', () => {
     vi.restoreAllMocks()
   })
 
+  const pick = (content: string) =>
+    fireEvent.change(screen.getByLabelText('Restore backup'), {
+      target: { files: [new File([content], 'backup.json', { type: 'application/json' })] },
+    })
+
+  it('restores a picked Backup file and shows what was added', async () => {
+    const storage = createMemoryStorage()
+    renderApp(storage, '/settings')
+
+    pick(JSON.stringify({
+      format: 'discgolf-backup', version: 1, exportedAt: '2026-11-21T10:00:00.000Z',
+      data: { courses: [], layouts: [], players: [{ id: 'p1', name: 'Kari' }], rounds: [] },
+    }))
+
+    expect(await screen.findByText(/Players: 1 added, 0 updated, 0 skipped/)).toBeTruthy()
+    expect(await storage.get('players', 'p1')).toMatchObject({ name: 'Kari' })
+  })
+
+  it('shows an error for a file that is not a Backup', async () => {
+    renderApp(createMemoryStorage(), '/settings')
+    pick('{ not json')
+    expect(await screen.findByText('Not a backup file. Nothing was restored.')).toBeTruthy()
+  })
+
+  it('shows an error for a Backup from a newer app version', async () => {
+    renderApp(createMemoryStorage(), '/settings')
+    pick(JSON.stringify({ format: 'discgolf-backup', version: 99, data: {} }))
+    expect(await screen.findByText('This backup is from a newer app version. Nothing was restored.')).toBeTruthy()
+  })
+
   it('no longer offers course initialization on Courses', () => {
     renderApp(createMemoryStorage(), '/courses')
     expect(screen.queryByRole('button', { name: 'Initialize courses' })).toBeNull()
