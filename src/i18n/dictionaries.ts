@@ -1,7 +1,10 @@
 const en = {
   tabs: { label: 'Main', home: 'Home', courses: 'Courses', players: 'Players', history: 'History' },
   language: { label: 'Language' },
-  settings: { title: 'Settings', backToHome: 'Back to home', courses: 'Courses' },
+  settings: {
+    title: 'Settings', backToHome: 'Back to home', courses: 'Courses',
+    backup: 'Backup', downloadBackup: 'Download backup',
+  },
   common: {
     archived: 'Archived',
     cancel: 'Cancel',
@@ -157,7 +160,10 @@ export type Dictionary = typeof en
 const fi: Dictionary = {
   tabs: { label: 'Päävalikko', home: 'Koti', courses: 'Radat', players: 'Pelaajat', history: 'Historia' },
   language: { label: 'Kieli' },
-  settings: { title: 'Asetukset', backToHome: 'Takaisin kotiin', courses: 'Radat' },
+  settings: {
+    title: 'Asetukset', backToHome: 'Takaisin kotiin', courses: 'Radat',
+    backup: 'Varmuuskopio', downloadBackup: 'Lataa varmuuskopio',
+  },
   common: {
     archived: 'Arkistoitu',
     cancel: 'Peruuta',

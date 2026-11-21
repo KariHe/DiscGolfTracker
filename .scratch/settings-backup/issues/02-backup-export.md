@@ -4,10 +4,10 @@
 
 **Blocked by:** 01 (Settings page)
 
-**Status:** ready-for-agent
+**Status:** resolved
 
-- [ ] Creating a Backup is a pure domain function over the Storage port (no React)
-- [ ] Archived courses, layouts and players and all finished rounds are included
-- [ ] The Active Round and the language preference are never included
-- [ ] The Settings button downloads the file with the local-date filename
-- [ ] Domain and UI tests; typecheck, lint and tests pass
+- [x] Creating a Backup is a pure domain function over the Storage port (no React)
+- [x] Archived courses, layouts and players and all finished rounds are included
+- [x] The Active Round and the language preference are never included
+- [x] The Settings button downloads the file with the local-date filename
+- [x] Domain and UI tests; typecheck, lint and tests pass

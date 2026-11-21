@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router'
 import App from '../App.tsx'
 import type { Storage } from '../storage/port.ts'
@@ -41,6 +41,29 @@ describe('Settings', () => {
     expect(await screen.findByText(/^Imported \d+ courses, \d+ layouts/)).toBeTruthy()
     expect((await storage.list('courses')).length).toBeGreaterThan(50)
     expect((await storage.list('layouts')).length).toBeGreaterThan(50)
+  })
+
+  it('downloads a Backup file named by local date', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] })
+    vi.setSystemTime(new Date(2026, 10, 21, 23, 30))
+    const storage = createMemoryStorage()
+    await storage.save('players', { id: 'p1', name: 'Kari' })
+    let blob: Blob | undefined
+    URL.createObjectURL = vi.fn((b: Blob) => { blob = b; return 'blob:backup' })
+    URL.revokeObjectURL = vi.fn()
+    const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function (this: HTMLAnchorElement) {
+      expect(this.download).toBe('discgolf-backup-2026-11-21.json')
+      expect(this.href).toBe('blob:backup')
+    })
+    renderApp(storage, '/settings')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Download backup' }))
+
+    await waitFor(() => expect(click).toHaveBeenCalledOnce())
+    const file = JSON.parse(await blob!.text())
+    expect(file).toMatchObject({ format: 'discgolf-backup', version: 1, data: { players: [{ id: 'p1', name: 'Kari' }] } })
+    vi.useRealTimers()
+    vi.restoreAllMocks()
   })
 
   it('no longer offers course initialization on Courses', () => {

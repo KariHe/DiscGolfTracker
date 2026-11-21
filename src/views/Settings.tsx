@@ -12,6 +12,19 @@ import { Icon } from '../components/Icon.tsx'
 import { icon } from '../components/icons.tsx'
 import { LanguageSwitcher } from '../components/LanguageSwitcher.tsx'
 import { importCourses } from '../domain/importCourses.ts'
+import { createBackup } from '../domain/backup.ts'
+
+const pad = (n: number) => String(n).padStart(2, '0')
+const localDate = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
+
+function download(filename: string, blob: Blob) {
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = filename
+  link.click()
+  URL.revokeObjectURL(url)
+}
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -38,6 +51,12 @@ export default function Settings() {
     }
   }
 
+  async function downloadBackup() {
+    const now = new Date()
+    const backup = await createBackup(storage, now)
+    download(`discgolf-backup-${localDate(now)}.json`, new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' }))
+  }
+
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, pt: 1.5, pb: 2 }}>
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
@@ -49,6 +68,12 @@ export default function Settings() {
 
       <Section title={t.language.label}>
         <LanguageSwitcher />
+      </Section>
+
+      <Section title={t.settings.backup}>
+        <Button size="small" variant="outlined" onClick={downloadBackup} sx={{ whiteSpace: 'nowrap', px: 1.5 }}>
+          {t.settings.downloadBackup}
+        </Button>
       </Section>
 
       <Section title={t.settings.courses}>
