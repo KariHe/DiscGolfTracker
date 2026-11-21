@@ -129,7 +129,14 @@ async function validateBackup(file: Record<string, unknown>, storage: Storage): 
       || !isOptional(playerIds, (v) => Array.isArray(v) && v.every(isString))
       || !isOptional(scores, (v) => isObject(v) && Object.values(v).every((holes) =>
         Array.isArray(holes) && holes.every((h) => h === null || isPositiveInt(h))))) invalid(`Round ${round.id}: invalid`)
-    if (round.layoutId !== undefined && !(await exists('layouts', round.layoutId))) invalid(`Round ${round.id}: unknown layout`)
+    if (round.layoutId !== undefined) {
+      const layout = result.layouts.find((l) => l.id === round.layoutId) ?? await storage.get('layouts', round.layoutId as string)
+      if (!layout) invalid(`Round ${round.id}: unknown layout`)
+      const holes = layout.pars.length
+      if (Object.values((scores as Record<string, unknown[]> | undefined) ?? {}).some((h) => h.length > holes)) {
+        invalid(`Round ${round.id}: more scores than holes`)
+      }
+    }
     const players = [...((playerIds as string[] | undefined) ?? []), ...Object.keys((scores as object | undefined) ?? {})]
     for (const id of players) if (!(await exists('players', id))) invalid(`Round ${round.id}: unknown player ${id}`)
     const restoredScores = scores && Object.fromEntries(
@@ -155,8 +162,9 @@ const fillGaps: { [K in keyof BackupData]: GapFill<BackupData[K][number]> } = {
     const filled: Round = { ...local, date: local.date ?? backup.date, note: local.note ?? backup.note }
     if (filled.date === undefined) delete filled.date
     if (filled.note === undefined) delete filled.note
-    if (local.layoutId === backup.layoutId) {
+    if (local.layoutId !== undefined && local.layoutId === backup.layoutId) {
       for (const id of local.playerIds ?? []) {
+        if (!backup.playerIds?.includes(id)) continue
         const from = backup.scores?.[id]
         if (!from) continue
         const own = local.scores?.[id] ?? []

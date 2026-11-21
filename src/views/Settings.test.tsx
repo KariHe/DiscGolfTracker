@@ -51,17 +51,19 @@ describe('Settings', () => {
     let blob: Blob | undefined
     URL.createObjectURL = vi.fn((b: Blob) => { blob = b; return 'blob:backup' })
     URL.revokeObjectURL = vi.fn()
+    let clicked: { download: string; href: string; connected: boolean } | undefined
     const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function (this: HTMLAnchorElement) {
-      expect(this.download).toBe('discgolf-backup-2026-11-21.json')
-      expect(this.href).toBe('blob:backup')
+      clicked = { download: this.download, href: this.href, connected: this.isConnected }
     })
     renderApp(storage, '/settings')
 
     fireEvent.click(screen.getByRole('button', { name: 'Download backup' }))
 
     await waitFor(() => expect(click).toHaveBeenCalledOnce())
+    expect(clicked).toEqual({ download: 'discgolf-backup-2026-11-21.json', href: 'blob:backup', connected: true })
     const file = JSON.parse(await blob!.text())
     expect(file).toMatchObject({ format: 'discgolf-backup', version: 1, data: { players: [{ id: 'p1', name: 'Kari' }] } })
+    expect(document.querySelector('a[download]')).toBeNull()
     vi.useRealTimers()
     vi.restoreAllMocks()
   })

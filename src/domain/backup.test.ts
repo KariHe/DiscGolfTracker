@@ -131,6 +131,10 @@ describe('restoreBackup', () => {
       await expectRejected(await withData((d) => { d.rounds[0].scores = { p1: [3, 'x'] } }), 'invalid')
     })
 
+    it('when a round has more scores than its layout has holes', async () => {
+      await expectRejected(await withData((d) => { d.rounds[0].scores.p1 = [3, 3, 3] }), 'invalid')
+    })
+
     it('when an id appears twice in one kind', async () => {
       await expectRejected(await withData((d) => { d.players.push({ id: 'p1', name: 'Again' }) }), 'invalid')
     })
@@ -309,5 +313,26 @@ describe('restoreBackup gap fill on existing ids', () => {
 
     expect(again.rounds).toEqual({ added: 0, updated: 0, skipped: 1 })
     expect(again.layouts).toEqual({ added: 0, updated: 0, skipped: 1 })
+  })
+  it('leaves scores alone when neither round has a layout', async () => {
+    const target = await withRoundRefs()
+    await target.save('rounds', { id: 'r1', playerIds: ['p1'], finished: true, scores: { p1: [3, undefined] } })
+
+    await restoreBackup(target, fileWith({
+      rounds: [{ id: 'r1', playerIds: ['p1'], finished: true, scores: { p1: [3, 3] } }],
+    }))
+
+    expect((await target.get('rounds', 'r1'))?.scores).toEqual({ p1: [3, undefined] })
+  })
+
+  it('does not fill scores for a player missing from the backup round', async () => {
+    const target = await withRoundRefs()
+    await target.save('rounds', { id: 'r1', layoutId: 'l1', playerIds: ['p1', 'p2'], finished: true, scores: { p2: [3, undefined, 3] } })
+
+    await restoreBackup(target, fileWith({
+      rounds: [{ id: 'r1', layoutId: 'l1', playerIds: ['p1'], finished: true, scores: { p1: [3, 3, 3], p2: [3, 3, 3] } }],
+    }))
+
+    expect((await target.get('rounds', 'r1'))?.scores).toEqual({ p1: [3, 3, 3], p2: [3, undefined, 3] })
   })
 })

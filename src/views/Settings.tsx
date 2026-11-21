@@ -23,8 +23,11 @@ function download(filename: string, blob: Blob) {
   const link = document.createElement('a')
   link.href = url
   link.download = filename
+  // Firefox and Safari need the link in the document, and the URL alive until the download starts.
+  document.body.append(link)
   link.click()
-  URL.revokeObjectURL(url)
+  link.remove()
+  setTimeout(() => URL.revokeObjectURL(url), 0)
 }
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
