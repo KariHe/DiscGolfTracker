@@ -39,18 +39,18 @@ describe('language', () => {
     expect(document.documentElement.lang).toBe('en')
   })
 
-  it('switches language from Home', () => {
+  it('switches language from Settings', () => {
     browserLanguage('en-US')
-    renderApp()
+    renderApp(createMemoryStorage(), '/settings')
     fireEvent.click(screen.getByRole('button', { name: 'Suomi' }))
     expect(screen.getByRole('link', { name: 'Radat' })).toBeTruthy()
-    expect(screen.getByRole('heading', { name: 'Pelataan' })).toBeTruthy()
+    expect(screen.getByRole('heading', { name: 'Asetukset' })).toBeTruthy()
     expect(document.documentElement.lang).toBe('fi')
   })
 
   it('remembers the choice after a remount', () => {
     browserLanguage('en-US')
-    renderApp()
+    renderApp(createMemoryStorage(), '/settings')
     fireEvent.click(screen.getByRole('button', { name: 'Suomi' }))
     cleanup()
     renderApp()

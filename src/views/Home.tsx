@@ -5,6 +5,7 @@ import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'
 import ButtonBase from '@mui/material/ButtonBase'
 import Card from '@mui/material/Card'
+import IconButton from '@mui/material/IconButton'
 import Link from '@mui/material/Link'
 import Typography from '@mui/material/Typography'
 import { useTheme } from '@mui/material/styles'
@@ -14,7 +15,6 @@ import type { Course, Layout, Player, Round } from '../domain/types.ts'
 import { playerTint, scoreColor } from '../theme'
 import { Icon } from '../components/Icon.tsx'
 import { icon } from '../components/icons.tsx'
-import { LanguageSwitcher } from '../components/LanguageSwitcher.tsx'
 import { useI18n } from '../i18n/useI18n.ts'
 
 const RECENT_COUNT = 2
@@ -68,7 +68,9 @@ export default function Home() {
           <Typography variant="overline" color="text.secondary">{t.home.appName}</Typography>
           <Typography variant="h1" sx={{ fontSize: 34, mt: 0.5 }}>{t.home.title}</Typography>
         </div>
-        <LanguageSwitcher />
+        <IconButton component={RouterLink} to="/settings" aria-label={t.settings.title}>
+          <Icon>{icon.settings}</Icon>
+        </IconButton>
       </Box>
 
       {active ? <ActiveRoundCard round={active} layout={layoutOf(active)}

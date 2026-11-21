@@ -36,6 +36,14 @@ _Avoid_: result, throws (per-hole total is a count of throws; "throws" implies p
 To hide a **Course**, **Layout**, or **Player** that has recorded **History** entries so pickers stop offering it while past records stay intact. Deleted outright is only allowed when nothing references it.
 _Avoid_: delete, remove, disable
 
+**Backup**:
+A versioned JSON file holding every **Course**, **Layout**, **Player** and finished **Round** on the device, archived ones included, but never the **Active Round** or the language preference (ADR-0004).
+_Avoid_: export file, dump, snapshot
+
+**Restore**:
+Loading a **Backup** into the device by merging on record id: new records are added, and existing ones keep their values, with only their empty fields filled from the Backup. Nothing is ever deleted or overwritten.
+_Avoid_: import (reserved for bundled course initialization), sync, replace
+
 **Scorekeeper**:
 The person using the app, entering everyone's scores on one device. There are no per-player devices.
 _Avoid_: admin, owner
@@ -46,6 +54,7 @@ _Avoid_: admin, owner
 - A **Round** uses exactly one **Layout**
 - A **Round** contains one **Score** per **Player** per hole of its **Layout**
 - An **Active Round** is the only **Round** not in the **History**
+- A **Backup** contains the **History**, not the **Active Round**; **Restore** never changes the **Active Round**
 
 ## Flagged ambiguities
 
