@@ -60,7 +60,7 @@ A new Settings page (`/settings`), reached from a gear icon in the Home header. 
   - **Layout**: per-hole `lengths` when the hole counts match. `pars` are never touched (ADR-0002).
   - **Round**: `note` and `date` when the local ones are missing. Missing per-hole scores are filled only when `layoutId` is the same, and only for players in both rounds. Players are never added to a round.
   - `archived` is never changed.
-- Never touched: archived local records (and, as in `importCourses`, layouts of archived local courses), and the local Active Round (even when the Backup has the same id finished).
+- Never touched: archived local records (and, as in `importCourses`, layouts of archived local courses), and the local Active Round (even when the Backup has the same id finished). This protects existing records only: a *new* layout whose course is archived locally is still added, unlike `importCourses` (decided 2026-11-21).
 - `RestoreResult`: per kind `{ added, updated, skipped }`. Settings shows it as a translated summary, or shows the error message on failure.
 
 ## Testing Decisions
