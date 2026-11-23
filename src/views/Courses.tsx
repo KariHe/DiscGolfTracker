@@ -1,10 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
-import { Link } from 'react-router'
 import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'
-import ButtonBase from '@mui/material/ButtonBase'
-import Card from '@mui/material/Card'
 import Drawer from '@mui/material/Drawer'
 import IconButton from '@mui/material/IconButton'
 import InputAdornment from '@mui/material/InputAdornment'
@@ -13,6 +10,7 @@ import Typography from '@mui/material/Typography'
 import { useStorage } from '../storage/useStorage.ts'
 import type { Course, Layout } from '../domain/types.ts'
 import { useI18n } from '../i18n/useI18n.ts'
+import { ListRow } from '../components/ListRow.tsx'
 import { Icon } from '../components/Icon.tsx'
 import { icon } from '../components/icons.tsx'
 
@@ -23,12 +21,7 @@ function CourseCard({ course, layoutCount }: { course: Course; layoutCount: numb
     ? course.location
     : [course.location, t.courses.layouts(layoutCount)].filter(Boolean).join(' · ')
   return (
-    <Card sx={archived ? { bgcolor: 'transparent', border: 2, borderStyle: 'dashed', borderColor: 'surface.handle' } : undefined}>
-      <ButtonBase
-        component={Link}
-        to={`/courses/${course.id}`}
-        sx={{ width: '100%', display: 'flex', alignItems: 'center', gap: 1.75, p: '16px 14px 16px 16px', textAlign: 'left' }}
-      >
+    <ListRow to={`/courses/${course.id}`} variant={archived ? 'dashed' : undefined} sx={{ gap: 1.75 }}>
         <Box sx={{
           width: 48, height: 48, borderRadius: '16px', flex: 'none',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -46,8 +39,7 @@ function CourseCard({ course, layoutCount }: { course: Course; layoutCount: numb
           )}
         </Box>
         <Box sx={{ color: 'text.secondary', display: 'flex' }}><Icon size={20}>{icon.chevron}</Icon></Box>
-      </ButtonBase>
-    </Card>
+    </ListRow>
   )
 }
 

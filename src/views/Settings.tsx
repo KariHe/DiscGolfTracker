@@ -3,12 +3,12 @@ import type { ChangeEvent } from 'react'
 import { Link } from 'react-router'
 import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'
-import Card from '@mui/material/Card'
 import IconButton from '@mui/material/IconButton'
 import Snackbar from '@mui/material/Snackbar'
 import Typography from '@mui/material/Typography'
 import { useStorage } from '../storage/useStorage.ts'
 import { useI18n } from '../i18n/useI18n.ts'
+import { Section } from '../components/Section.tsx'
 import { Icon } from '../components/Icon.tsx'
 import { icon } from '../components/icons.tsx'
 import { LanguageSwitcher } from '../components/LanguageSwitcher.tsx'
@@ -30,13 +30,12 @@ function download(filename: string, blob: Blob) {
   setTimeout(() => URL.revokeObjectURL(url), 0)
 }
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+function SettingsSection({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <Card component="section" aria-label={title}
-      sx={{ p: 2, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 2 }}>
+    <Section aria-label={title} sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 2 }}>
       <Typography variant="h5" component="h2">{title}</Typography>
       {children}
-    </Card>
+    </Section>
   )
 }
 
@@ -89,28 +88,28 @@ export default function Settings() {
         <Typography variant="h1" sx={{ fontSize: 34 }}>{t.settings.title}</Typography>
       </Box>
 
-      <Section title={t.language.label}>
+      <SettingsSection title={t.language.label}>
         <LanguageSwitcher />
-      </Section>
+      </SettingsSection>
 
-      <Section title={t.settings.backup}>
+      <SettingsSection title={t.settings.backup}>
         <Button size="small" variant="outlined" onClick={downloadBackup} sx={{ whiteSpace: 'nowrap', px: 1.5 }}>
           {t.settings.downloadBackup}
         </Button>
-      </Section>
+      </SettingsSection>
 
-      <Section title={t.settings.restore}>
+      <SettingsSection title={t.settings.restore}>
         <Button size="small" variant="outlined" component="label" sx={{ whiteSpace: 'nowrap', px: 1.5 }}>
           {t.settings.restoreBackup}
           <input hidden type="file" accept="application/json,.json" onChange={restore} />
         </Button>
-      </Section>
+      </SettingsSection>
 
-      <Section title={t.settings.courses}>
+      <SettingsSection title={t.settings.courses}>
         <Button size="small" variant="outlined" onClick={initialize} sx={{ whiteSpace: 'nowrap', px: 1.5 }}>
           {t.courses.initialize}
         </Button>
-      </Section>
+      </SettingsSection>
 
       <Snackbar open={message !== null} autoHideDuration={6000} onClose={() => setMessage(null)} message={message} />
     </Box>

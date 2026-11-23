@@ -1,9 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Link as RouterLink } from 'react-router'
 import Avatar from '@mui/material/Avatar'
 import Box from '@mui/material/Box'
-import ButtonBase from '@mui/material/ButtonBase'
-import Card from '@mui/material/Card'
 import Typography from '@mui/material/Typography'
 import { useTheme } from '@mui/material/styles'
 import { useStorage } from '../storage/useStorage.ts'
@@ -11,6 +8,7 @@ import { playerTotals, vsParLabel } from '../domain/scores.ts'
 import type { Course, Layout, Player, Round } from '../domain/types.ts'
 import { playerTint, scoreColor } from '../theme'
 import { useI18n } from '../i18n/useI18n.ts'
+import { ListRow } from '../components/ListRow.tsx'
 
 const visuallyHidden = { position: 'absolute', width: '1px', height: '1px', overflow: 'hidden', clipPath: 'inset(50%)' } as const
 
@@ -72,12 +70,7 @@ export default function History() {
           .map((player, index) => ({ player, tint: playerTint(theme, index), ...playerTotals(round, player.id, layout) }))
           .sort((a, b) => a.total - b.total)
         return (
-          <Card key={round.id}>
-            <ButtonBase
-              component={RouterLink}
-              to={`/history/${round.id}`}
-              sx={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'stretch', gap: 1.5, p: 2, textAlign: 'left' }}
-            >
+          <ListRow key={round.id} to={`/history/${round.id}`} sx={{ flexDirection: 'column', alignItems: 'stretch', gap: 1.5 }}>
               <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 1.5 }}>
                 <Box sx={{ minWidth: 0 }}>
                   <Typography variant="h5" component="h2" noWrap>{course?.name ?? layout?.name}</Typography>
@@ -100,8 +93,7 @@ export default function History() {
                   </Box>
                 ))}
               </Box>
-            </ButtonBase>
-          </Card>
+          </ListRow>
         )
       })}
     </Box>
