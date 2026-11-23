@@ -3,8 +3,6 @@ import { Link as RouterLink } from 'react-router'
 import Avatar from '@mui/material/Avatar'
 import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'
-import ButtonBase from '@mui/material/ButtonBase'
-import Card from '@mui/material/Card'
 import IconButton from '@mui/material/IconButton'
 import Link from '@mui/material/Link'
 import Typography from '@mui/material/Typography'
@@ -16,6 +14,8 @@ import { playerTint, scoreColor } from '../theme'
 import { Icon } from '../components/Icon.tsx'
 import { icon } from '../components/icons.tsx'
 import { useI18n } from '../i18n/useI18n.ts'
+import { ListRow } from '../components/ListRow.tsx'
+import { Section } from '../components/Section.tsx'
 
 const RECENT_COUNT = 2
 
@@ -75,7 +75,7 @@ export default function Home() {
 
       {active ? <ActiveRoundCard round={active} layout={layoutOf(active)}
         courseName={courseOf(layoutOf(active))?.name} players={playersOf(active)} /> : (
-        <Card sx={{ p: 2.5, pt: 3, borderRadius: `${theme.radius.lg}px`, display: 'flex', flexDirection: 'column', gap: 2 }}>
+        <Section variant="hero" padding={2.5} sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
           <div>
             <Typography variant="overline" color="primary">{t.home.noRound}</Typography>
             <Typography sx={{ mt: 0.75, fontSize: 26, fontWeight: 800 }}>{t.home.headOut}</Typography>
@@ -86,7 +86,7 @@ export default function Home() {
           <Button size="large" component={RouterLink} to="/round/new" startIcon={<Icon>{icon.plus}</Icon>}>
             {t.home.startRound}
           </Button>
-        </Card>
+        </Section>
       )}
 
       <Box sx={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', mt: 1 }}>
@@ -107,12 +107,7 @@ export default function Home() {
           .sort((a, b) => a.total - b.total)[0]
         const { month, day } = dateParts(round.date, locale)
         return (
-          <Card key={round.id}>
-            <ButtonBase
-              component={RouterLink}
-              to={`/history/${round.id}`}
-              sx={{ width: '100%', display: 'flex', alignItems: 'center', gap: 1.5, p: '14px 14px 14px 16px', textAlign: 'left' }}
-            >
+          <ListRow key={round.id} to={`/history/${round.id}`} sx={{ gap: 1.5 }}>
               <Box sx={{ width: 48, textAlign: 'center' }}>
                 <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700 }}>{month}</Typography>
                 <Typography sx={{ fontSize: 22, fontWeight: 800, lineHeight: 1.1 }}>{day}</Typography>
@@ -135,8 +130,7 @@ export default function Home() {
                   </Typography>
                 </Box>
               )}
-            </ButtonBase>
-          </Card>
+          </ListRow>
         )
       })}
     </Box>
@@ -154,7 +148,7 @@ function ActiveRoundCard({ round, layout, courseName, players }: {
   const hole = layout ? firstIncompleteHole(round, layout) : 0
   const holeCount = layout?.pars.length ?? 0
   return (
-    <Card sx={{ p: 2.5, borderRadius: `${theme.radius.lg}px`, display: 'flex', flexDirection: 'column', gap: 1.75 }}>
+    <Section variant="hero" padding={2.5} sx={{ display: 'flex', flexDirection: 'column', gap: 1.75 }}>
       <div>
         <Typography variant="overline" color="primary">{t.home.roundInProgress}</Typography>
         <Typography sx={{ mt: 0.75, fontSize: 26, fontWeight: 800 }}>{courseName ?? layout?.name}</Typography>
@@ -190,6 +184,6 @@ function ActiveRoundCard({ round, layout, courseName, players }: {
       <Button size="large" component={RouterLink} to="/round" endIcon={<Icon>{icon.arrow}</Icon>}>
         {t.home.resumeRound}
       </Button>
-    </Card>
+    </Section>
   )
 }

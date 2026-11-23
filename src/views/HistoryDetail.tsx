@@ -4,7 +4,6 @@ import Avatar from '@mui/material/Avatar'
 import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'
 import ButtonBase from '@mui/material/ButtonBase'
-import Card from '@mui/material/Card'
 import Dialog from '@mui/material/Dialog'
 import DialogActions from '@mui/material/DialogActions'
 import DialogTitle from '@mui/material/DialogTitle'
@@ -21,6 +20,7 @@ import type { Course, Layout, Player, Round } from '../domain/types.ts'
 import { playerTint, scoreColor } from '../theme'
 import type { Dictionary } from '../i18n/dictionaries.ts'
 import { useI18n } from '../i18n/useI18n.ts'
+import { Section } from '../components/Section.tsx'
 import { Icon } from '../components/Icon.tsx'
 import { icon } from '../components/icons.tsx'
 
@@ -177,7 +177,7 @@ export default function HistoryDetail() {
       </Dialog>
 
       <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 1.5, pt: 1.5 }}>
-        <Card sx={{ p: 2, borderRadius: `${theme.radius.lg}px` }}>
+        <Section variant="hero" padding={2.5}>
           <Typography variant="overline" color="primary">
             {t.historyDetail.final}{layout && ` · ${t.common.par(parTotal)}`}
           </Typography>
@@ -192,10 +192,10 @@ export default function HistoryDetail() {
               </Typography>
             </Box>
           ))}
-        </Card>
+        </Section>
 
         {layout && (
-          <Card sx={{ p: 1.5, display: 'flex', flexDirection: 'column', gap: 1 }}>
+          <Section sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
             {chunkCount > 1 && (
               <Box role="group" aria-label={t.historyDetail.scorecardHoles} sx={{
                 display: 'grid', gridTemplateColumns: `repeat(${chunkCount}, minmax(0, 1fr))`, gap: 0.5,
@@ -266,7 +266,7 @@ export default function HistoryDetail() {
                 </Box>
               )
             })}
-          </Card>
+          </Section>
         )}
 
         {editing ? (
@@ -283,10 +283,10 @@ export default function HistoryDetail() {
             </Box>
           </Box>
         ) : round.note && (
-          <Card sx={{ p: '14px 16px' }}>
+          <Section>
             <Typography variant="overline" color="text.secondary">{t.common.note}</Typography>
             <Typography sx={{ mt: 0.5 }}>{round.note}</Typography>
-          </Card>
+          </Section>
         )}
       </Box>
 

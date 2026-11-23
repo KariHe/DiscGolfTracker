@@ -21,6 +21,7 @@ import { firstIncompleteHole, playerTotals, formatVsPar, scoreName, teeingOrder,
 import type { Course, Layout, Player, Round } from '../domain/types.ts'
 import { playerTint, scoreColor } from '../theme'
 import { useI18n } from '../i18n/useI18n.ts'
+import { Section } from '../components/Section.tsx'
 import { Icon } from '../components/Icon.tsx'
 import { icon } from '../components/icons.tsx'
 
@@ -160,7 +161,7 @@ export default function Round() {
         </Menu>
       </Box>
 
-      <Card sx={{ mt: 1.5, p: 2.5, borderRadius: `${theme.radius.lg}px` }}>
+      <Section variant="hero" padding={2.5} sx={{ mt: 1.5 }}>
         <Typography variant="overline" color="primary">
           {t.home.holeOf(hole + 1, layout.pars.length)}
         </Typography>
@@ -189,7 +190,7 @@ export default function Round() {
             </ButtonBase>
           ))}
         </Box>
-      </Card>
+      </Section>
 
       <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 1.5, pt: 2 }}>
         {players.map((player, index) => {

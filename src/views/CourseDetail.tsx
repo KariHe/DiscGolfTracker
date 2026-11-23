@@ -4,7 +4,6 @@ import { Link, useNavigate, useParams } from 'react-router'
 import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'
 import ButtonBase from '@mui/material/ButtonBase'
-import Card from '@mui/material/Card'
 import Drawer from '@mui/material/Drawer'
 import IconButton from '@mui/material/IconButton'
 import Menu from '@mui/material/Menu'
@@ -15,6 +14,7 @@ import { useStorage } from '../storage/useStorage.ts'
 import { courseIsReferenced, layoutIsReferenced } from '../domain/records.ts'
 import type { Course, Layout, Round } from '../domain/types.ts'
 import { useI18n } from '../i18n/useI18n.ts'
+import { ListRow } from '../components/ListRow.tsx'
 import { Icon } from '../components/Icon.tsx'
 import { icon } from '../components/icons.tsx'
 
@@ -267,12 +267,16 @@ export default function CourseDetail() {
       {active.map((layout) => {
         const open = editingLayoutId === layout.id
         return (
-          <Card key={layout.id}>
-            <ButtonBase
-              aria-expanded={open}
-              onClick={() => setEditingLayoutId(open ? null : layout.id)}
-              sx={{ width: '100%', display: 'flex', alignItems: 'center', gap: 1.5, p: '14px 16px', textAlign: 'left' }}
-            >
+          <ListRow key={layout.id} aria-expanded={open} onClick={() => setEditingLayoutId(open ? null : layout.id)} sx={{ gap: 1.5 }}
+            details={open && (
+              <LayoutEditor
+                key={layout.id}
+                layout={layout}
+                used={layoutIsReferenced(rounds, layout.id)}
+                onDone={() => { setEditingLayoutId(null); reload() }}
+                onDelete={() => removeLayout(layout)}
+              />
+            )}>
               <Box sx={{ flex: 1, minWidth: 0 }}>
                 <Typography variant="h5" component="span" noWrap sx={{ display: 'block' }}>{layout.name}</Typography>
                 <Typography variant="subtitle2" color="text.secondary">
@@ -282,17 +286,7 @@ export default function CourseDetail() {
               <Box sx={{ color: 'text.secondary', display: 'flex', transform: open ? 'rotate(-90deg)' : 'rotate(90deg)' }}>
                 <Icon size={20}>{icon.chevron}</Icon>
               </Box>
-            </ButtonBase>
-            {open && (
-              <LayoutEditor
-                key={layout.id}
-                layout={layout}
-                used={layoutIsReferenced(rounds, layout.id)}
-                onDone={() => { setEditingLayoutId(null); reload() }}
-                onDelete={() => removeLayout(layout)}
-              />
-            )}
-          </Card>
+          </ListRow>
         )
       })}
 
