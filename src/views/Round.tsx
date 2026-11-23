@@ -162,13 +162,13 @@ export default function Round() {
       </Box>
 
       <Section variant="hero" padding={2.5} sx={{ mt: 1.5 }}>
-        <Typography variant="overline" color="primary">
+        <Typography variant="overline" color="primary" sx={{ fontSize: 18 }}>
           {t.home.holeOf(hole + 1, layout.pars.length)}
         </Typography>
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1.5, mt: 0.5 }}>
-          <Typography variant="h1" component="p">{t.round.par(par)}</Typography>
+          <Typography variant="h1" component="p" sx={{ fontSize: 38 }}>{t.round.par(par)}</Typography>
           {length !== undefined && (
-            <Chip label={t.round.length(length)} />
+            <Chip label={t.round.length(length)} sx={{ fontSize: 16 }} />
           )}
         </Box>
         <Box sx={{ display: 'flex', gap: 0.5, mt: 1.5 }}>
